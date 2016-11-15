@@ -4,6 +4,8 @@ from __future__ import print_function
 
 import os
 
+from tensorflow.models.rnn.translate.data_utils import (
+    create_vocabulary, initialize_vocabulary, data_to_token_ids)
 import tensorflow as tf
 
 
@@ -16,9 +18,13 @@ tf.app.flags.DEFINE_string(
 
 FLAGS = tf.app.flags.FLAGS
 
+MAX_SMILE_VOCAB_TOKEN = 10000
 
-DATA_TMP_FILE = "data.tmp"
-VOCAB_FILE = "data.vocab"
+
+def mkdirp(dir_path):
+    """Error-free version of os.makedirs."""
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
 
 
 def logp_data_iter(logp_path=FLAGS.logp_path):
@@ -41,55 +47,51 @@ def pm2_data_iter(pm2_path=FLAGS.pm2_path):
             yield _smile
 
 
-def build_tmp_file(data_dir=FLAGS.data_dir):
-    """Merge pm2 and logp SMILE representation into same file."""
-    os.makedirs(data_dir)
-    print("Processing temporary data file...")
-    tmp_data_path = os.path.join(data_dir, DATA_TMP_FILE)
-    with open(tmp_data_path, "w+") as fobj:
-        print("Reading logp data...")
-        logp_iter = logp_data_iter()
-        for _smile in logp_iter:
-            fobj.write("%s\n" % _smile.strip())
-        print("Reading pm2 data...")
-        pm2_iter = pm2_data_iter()
-        for _smile in pm2_iter:
-            fobj.write("%s\n" % _smile.strip())
+def build_data_tmp(data_iter, data_path):
+    """Build temp data file inside the data_directory."""
+    with open(data_path, "w+") as fobj:
+        for _smile in data_iter:
+            fobj.write("%s\n" % _smile)
 
 
-def create_vocabulary(
-    data_path=os.path.join(FLAGS.data_dir, DATA_TMP_FILE),
-    vocab_path=os.path.join(FLAGS.data_dir, VOCAB_FILE)):
-    """Create vocabulary.
-
-    Return vocabulary and reverse vocabulary.
-    """
-    words = set()
-    with open(data_path) as data_fobj:
-        for _smile in data_fobj:
-            _smile = _smile.strip()
-            words.update(list(_smile))
-    with open(vocab_path, "w") as vocab_fobj:
-        vocab_fobj.write("\n".join(list(words)))
-    vocab = zip(list(words), range(1, len(words)+1))
-    return vocab, list(words)
+def smile_tokenizer(line):
+    """Return each non-empty character as the token."""
+    return list(line.strip().replace(" ", ""))
 
 
-def get_vocabulary(vocab_path=os.path.join(FLAGS.data_dir, VOCAB_FILE)):
-    """Get Vocabulary.
-
-    Return the same as create_vocabulary.
-    """
-    with oepn(vocab_path) as vocab_fobj:
-        words = vocab_fobj.read().split("\n")
-        vocab = zip(list(words), range(1, len(words)+1))
-    return vocab, words
+def get_vocabulary(data_path, vocab_path):
+    """Get the vocabulary for specific data temp file. If not, create one."""
+    # Create vocabulary if needed.
+    create_vocabulary(vocab_path, data_path, MAX_SMILE_VOCAB_TOKEN,
+                      tokenizer=smile_tokenizer, normalize_digits=False)
+    # Return the create vocabulary.
+    return initialize_vocabulary(vocab_path)
 
 
-def main(unused_argv):
+def prepare_seq2seq_pretrain_data(data_dir=FLAGS.data_dir):
+    """Prepare the data iteration."""
+    mkdirp(data_dir)
+    # Build pm2 data set for training.
+    print("Building pm2 data set...")
+    pm2_data_tmp_path = os.path.join(data_dir, "pm2.tmp")
+    pm2_vocab_path = os.path.join(data_dir, "pm2.vocab")
+    pm2_tokens_path = os.path.join(data_dir, "pm2.tokens")
+    build_data_tmp(pm2_data_iter(), pm2_data_tmp_path)
+    get_vocabulary(pm2_data_tmp_path, pm2_vocab_path)
+    data_to_token_ids(pm2_data_tmp_path, pm2_tokens_path, pm2_vocab_path,
+                      tokenizer=smile_tokenizer, normalize_digits=False)
+    # Use logp data set for development and testing.
+    print("Building logp data set...")
+    logp_data_tmp_path = os.path.join(data_dir, "logp.tmp")
+    logp_tokens_path = os.path.join(data_dir, "logp.tokens")
+    build_data_tmp(logp_data_iter(), logp_data_tmp_path)
+    data_to_token_ids(logp_data_tmp_path, logp_tokens_path, pm2_vocab_path,
+                      tokenizer=smile_tokenizer, normalize_digits=False)
+
+
+def main(_):
     """Main function for this file."""
-    build_tmp_file()
-    vocab, words = create_vocabulary()
+    prepare_seq2seq_pretrain_data()
 
 
 if __name__ == "__main__":
