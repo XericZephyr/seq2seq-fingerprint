@@ -177,7 +177,7 @@ def train():
                 # Print statistics for the previous epoch.
                 perplexity = math.exp(float(loss)) if loss < 300 else float("inf")
                 print ("global step %d learning rate %.4f step-time %.2f perplexity "
-                       "%.2f" % (model.global_step.eval(), model.learning_rate.eval(),
+                       "%.6f" % (model.global_step.eval(), model.learning_rate.eval(),
                                  step_time, perplexity))
                 # Decrease learning rate if no improvement was seen over last 3 times.
                 if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
