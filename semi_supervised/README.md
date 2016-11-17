@@ -11,6 +11,21 @@ python -m semi_supervised.data
 python -m semi_supervised.pretrain
 ```
 
+Sample Output:
+
+```
+global step 94200 learning rate 0.1849 step-time 0.38 perplexity 1.000061
+  eval: bucket 0 perplexity 1.11
+  eval: bucket 1 perplexity 1.07
+  eval: bucket 2 perplexity 1.06
+  eval: bucket 3 perplexity 1.08
+global step 94400 learning rate 0.1849 step-time 0.36 perplexity 1.000107
+  eval: bucket 0 perplexity 1.09
+  eval: bucket 1 perplexity 1.08
+  eval: bucket 2 perplexity 1.06
+  eval: bucket 3 perplexity 1.09
+```
+
 # Decode Random Samples
 
 ```bash
