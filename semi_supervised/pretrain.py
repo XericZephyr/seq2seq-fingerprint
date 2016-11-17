@@ -7,14 +7,13 @@ import os
 import random
 import sys
 import time
-import logging
 
 import numpy as np
 from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 from tensorflow.models.rnn.translate import data_utils
-from tensorflow.models.rnn.translate import seq2seq_model
+from . import seq2seq_model
 
 
 from .data import get_vocabulary, DEFAULT_DATA_DIR, smile_tokenizer
@@ -30,9 +29,9 @@ tf.app.flags.DEFINE_integer("batch_size", 256,
 tf.app.flags.DEFINE_integer("size", 256, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 3, "Number of layers in the model.")
 # tf.app.flags.DEFINE_string("data_dir", DEFAULT_DATA_DIR, "Data directory")
-tf.app.flags.DEFINE_string("vocab_path", os.path.join(DEFAULT_DATA_DIR, "pm2.vocab"), 
+tf.app.flags.DEFINE_string("vocab_path", os.path.join(DEFAULT_DATA_DIR, "pm2.vocab"),
                            "Vocabulary path.")
-tf.app.flags.DEFINE_string("train_dir", os.path.join(DEFAULT_DATA_DIR, "train"), 
+tf.app.flags.DEFINE_string("train_dir", os.path.join(DEFAULT_DATA_DIR, "train"),
                            "Training directory.")
 tf.app.flags.DEFINE_integer("max_train_data_size", 0,
                             "Limit on the size of training data (0: no limit).")
@@ -41,6 +40,8 @@ tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
 tf.app.flags.DEFINE_boolean("decode", False,
                             "Set to True for interactive decoding.")
 tf.app.flags.DEFINE_integer("decode_size", 10, "Set number of decode samples.")
+tf.app.flags.DEFINE_boolean("get_fp", False,
+                            "If true, output all fingerprint in logp data.")
 tf.app.flags.DEFINE_boolean("self_test", False,
                             "Run a self-test if this is set to True.")
 tf.app.flags.DEFINE_boolean("use_fp16", False,
@@ -102,17 +103,17 @@ def create_model(session, forward_only):
     dtype = tf.float16 if FLAGS.use_fp16 else tf.float32
     vocab_size = get_vocab_size(FLAGS.vocab_path)
     model = seq2seq_model.Seq2SeqModel(
-            vocab_size,
-            vocab_size,
-            _buckets,
-            FLAGS.size,
-            FLAGS.num_layers,
-            FLAGS.max_gradient_norm,
-            FLAGS.batch_size,
-            FLAGS.learning_rate,
-            FLAGS.learning_rate_decay_factor,
-            forward_only=forward_only,
-            dtype=dtype)
+        vocab_size,
+        vocab_size,
+        _buckets,
+        FLAGS.size,
+        FLAGS.num_layers,
+        FLAGS.max_gradient_norm,
+        FLAGS.batch_size,
+        FLAGS.learning_rate,
+        FLAGS.learning_rate_decay_factor,
+        forward_only=forward_only,
+        dtype=dtype)
     if not os.path.exists(FLAGS.train_dir):
         os.makedirs(FLAGS.train_dir)
     ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
@@ -202,37 +203,39 @@ def train():
 
 
 def decode():
+    """Decode function from logp data."""
+
+    # Load vocabularies.
+    vocab, rev_vocab = get_vocabulary(FLAGS.data_dir, FLAGS.vocab_path)
+
+    dev_path = os.path.join(FLAGS.data_dir, "logp.tmp")
+    # Read data into buckets and compute their sizes.
+    print ("Read development dataset...")
+
+    def sample_sentences(dev_path):
+        """Sample several sentences."""
+        samples = set()
+        with open(dev_path) as fobj:
+            lines = [_line for _line in fobj.readlines() if len(_line.strip())]
+        while len(samples) < FLAGS.decode_size:
+            samples.add(random.randrange(len(lines)))
+        return [lines[index].strip() for index in list(samples)]
+
+    # Decode from random sample in logp dataset.
+    sentences = sample_sentences(dev_path)
+
     with tf.Session() as sess:
         # Create model and load parameters.
         model = create_model(sess, True)
         model.batch_size = 1  # We decode one sentence at a time.
 
-        # Load vocabularies.
-        vocab, rev_vocab = get_vocabulary(FLAGS.data_dir, FLAGS.vocab_path)
-
-        dev_path = os.path.join(FLAGS.data_dir, "logp.tmp")
-        # Read data into buckets and compute their sizes.
-        print ("Read development dataset...")
-
-        def sample_sentences(dev_path):
-            """Sample several sentences."""
-            samples = set()
-            with open(dev_path) as fobj:
-                lines = [_line for _line in fobj.readlines() if len(_line.strip())]
-            while len(samples) < FLAGS.decode_size:
-                samples.add(random.randrange(len(lines)))
-            return [lines[index].strip() for index in list(samples)]
-
-
         exact_match_counter = 0
-        # Decode from random sample in 
-        sentences = sample_sentences(dev_path)
-
+        
         for sentence in sentences:
             print(": %s" % sentence)
             # Get token-ids for the input sentence.
             token_ids = data_utils.sentence_to_token_ids(
-                tf.compat.as_bytes(sentence), vocab, 
+                tf.compat.as_bytes(sentence), vocab,
                 tokenizer=smile_tokenizer, normalize_digits=False)
             # Which bucket does it belong to?
             bucket_id = len(_buckets) - 1
@@ -243,10 +246,10 @@ def decode():
 
             # Get a 1-element batch to feed the sentence to the model.
             encoder_inputs, decoder_inputs, target_weights = model.get_batch(
-                    {bucket_id: [(token_ids, [])]}, bucket_id)
+                {bucket_id: [(token_ids, [])]}, bucket_id)
             # Get output logits for the sentence.
-            _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
-                                             target_weights, bucket_id, True)
+            _, _, output_logits, fps = model.step(sess, encoder_inputs, decoder_inputs,
+                                                  target_weights, bucket_id, True, True)
             # This is a greedy decoder - outputs are just argmaxes of output_logits.
             outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
             # If there is an EOS symbol in outputs, cut them at that point.
@@ -254,11 +257,76 @@ def decode():
                 outputs = outputs[:outputs.index(data_utils.EOS_ID)]
             # Print out French sentence corresponding to outputs.
             output_sentence = "".join([tf.compat.as_str(rev_vocab[output]) for output in outputs])
-            print("> %s\n" % output_sentence)
+            print("> %s" % output_sentence)
+            # for vec in fps:
+            #     print(vec, vec.shape)
+            print("\n")
             if sentence == output_sentence:
                 exact_match_counter += 1
             sys.stdout.flush()
+
         print("Exact match: %d/%d" % (exact_match_counter, FLAGS.decode_size))
+
+
+def get_fingerprint():
+    """Get seq2seq fingerprint for logp data."""
+
+    # Load vocabularies.
+    vocab, rev_vocab = get_vocabulary(FLAGS.data_dir, FLAGS.vocab_path)
+
+    dev_path = os.path.join(FLAGS.data_dir, "logp.tmp")
+    output_path = os.path.join(FLAGS.data_dir, "logp.fp")
+    # Read data into buckets and compute their sizes.
+    print ("Read development dataset...")
+
+    with open(dev_path) as fobj:
+        sentences = [_line.strip() for _line in fobj if _line.strip()]
+
+    with tf.Session() as sess, open(output_path, "w+") as fout:
+        # Create model and load parameters.
+        model = create_model(sess, True)
+        model.batch_size = 1  # We decode one sentence at a time.
+
+        counter = 0
+        exact_match_counter = 0
+        
+        for sentence in sentences:
+            counter += 1
+            # Get token-ids for the input sentence.
+            token_ids = data_utils.sentence_to_token_ids(
+                tf.compat.as_bytes(sentence), vocab,
+                tokenizer=smile_tokenizer, normalize_digits=False)
+            # Which bucket does it belong to?
+            bucket_id = len(_buckets) - 1
+            for i, bucket in enumerate(_buckets):
+                if bucket[0] >= len(token_ids):
+                    bucket_id = i
+                    break
+
+            # Get a 1-element batch to feed the sentence to the model.
+            encoder_inputs, decoder_inputs, target_weights = model.get_batch(
+                {bucket_id: [(token_ids, [])]}, bucket_id)
+            # Get output logits for the sentence.
+            _, _, output_logits, fps = model.step(sess, encoder_inputs, decoder_inputs,
+                                                  target_weights, bucket_id, True, True)
+            # This is a greedy decoder - outputs are just argmaxes of output_logits.
+            outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
+            # If there is an EOS symbol in outputs, cut them at that point.
+            if data_utils.EOS_ID in outputs:
+                outputs = outputs[:outputs.index(data_utils.EOS_ID)]
+            # Print out French sentence corresponding to outputs.
+            output_sentence = "".join([tf.compat.as_str(rev_vocab[output]) for output in outputs])
+            seq2seq_fp = np.concatenate(tuple([fp.flatten() for fp in fps]))
+            fout.write(" ".join([str(fp) for fp in seq2seq_fp]))
+            fout.write("\n")
+            if sentence == output_sentence:
+                exact_match_counter += 1
+            if counter % 200 == 0:
+                print("Progress: %d/%d" % (counter, len(sentences)))
+            sys.stdout.flush()
+
+        print("Exact match: %d/%d" % (exact_match_counter, len(sentences)))
+
 
 
 def self_test_read_data():
@@ -273,11 +341,14 @@ def self_test_get_vocab_size():
 
 
 def main(_):
+    """Main function for the pretrain script."""
     if FLAGS.self_test:
         self_test_read_data()
         self_test_get_vocab_size()
     elif FLAGS.decode:
         decode()
+    elif FLAGS.get_fp:
+        get_fingerprint()
     else:
         train()
 

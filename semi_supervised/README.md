@@ -52,3 +52,25 @@ Sample Output:
 
 Exact match: 0/10
 ```
+
+# Generate all fingerprints for logp data
+
+```bash
+python -m semi_supervised.pretrain --get_fp 1
+```
+
+Sample Output:
+
+```
+Reading model parameters from /tmp/seq2seq-fp/pretrain/train/seq2seq_pretrain.ckpt-94000
+Progress: 200/10851
+Progress: 400/10851
+Progress: 600/10851
+Progress: 800/10851
+Progress: 1000/10851
+[omit several lines...]
+Progress: 10400/10851
+Progress: 10600/10851
+Progress: 10800/10851
+Exact match: 8086/10851
+```
