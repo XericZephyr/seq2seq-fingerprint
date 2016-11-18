@@ -9,7 +9,7 @@ from tensorflow.models.rnn.translate.data_utils import (
 import tensorflow as tf
 
 
-DEFAULT_DATA_DIR = "/tmp/seq2seq-fp/pretrain/"
+DEFAULT_DATA_DIR = os.path.expanduser("~/expr/seq2seq-fp/pretrain/")
 
 
 tf.app.flags.DEFINE_string(
