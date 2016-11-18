@@ -9,12 +9,15 @@ from tensorflow.models.rnn.translate.data_utils import (
 import tensorflow as tf
 
 
+DEFAULT_DATA_DIR = os.path.expanduser("~/expr/seq2seq-fp/pretrain/")
+
+
 tf.app.flags.DEFINE_string(
     "logp_path", "/smile/nfs/projects/nih_drug/data/logp/logp.smi", "logp data path.")
 tf.app.flags.DEFINE_string(
     "pm2_path", "/smile/nfs/projects/nih_drug/data/pm2/pm2.txt", "pm2 data path")
 tf.app.flags.DEFINE_string(
-    "data_dir", "/tmp/seq2seq-fp/pretrain/", "Pretrain data path, holding temporary data.")
+    "data_dir", DEFAULT_DATA_DIR, "Pretrain data path, holding temporary data.")
 
 FLAGS = tf.app.flags.FLAGS
 
