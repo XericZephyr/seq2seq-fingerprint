@@ -13,13 +13,14 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 from tensorflow.models.rnn.translate import data_utils
-from . import seq2seq_model
+from tensorflow.models.rnn.translate import seq2seq_model
 
 
 from .data import get_vocabulary, DEFAULT_DATA_DIR, smile_tokenizer
 
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
+tf.app.flags.DEFINE_boolean("reset_learning_rate", False, "If reset learning rate.")
 tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
                           "Learning rate decays by this much.")
 tf.app.flags.DEFINE_float("max_gradient_norm", 5.0,
@@ -137,6 +138,9 @@ def train():
         # Create model.
         print("Creating %d layers of %d units." % (FLAGS.num_layers, FLAGS.size))
         model = create_model(sess, False)
+        if FLAGS.reset_learning_rate:
+            print("Resetting learning rate to %.8f" % FLAGS.learning_rate)
+            sess.run([tf.assign(model.learning_rate, FLAGS.learning_rate)])
 
         # Read data into buckets and compute their sizes.
         print ("Reading development and training data (limit: %d)."
@@ -248,8 +252,8 @@ def decode():
             encoder_inputs, decoder_inputs, target_weights = model.get_batch(
                 {bucket_id: [(token_ids, [])]}, bucket_id)
             # Get output logits for the sentence.
-            _, _, output_logits, fps = model.step(sess, encoder_inputs, decoder_inputs,
-                                                  target_weights, bucket_id, True, True)
+            _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
+                                             target_weights, bucket_id, True)
             # This is a greedy decoder - outputs are just argmaxes of output_logits.
             outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
             # If there is an EOS symbol in outputs, cut them at that point.
@@ -258,8 +262,6 @@ def decode():
             # Print out French sentence corresponding to outputs.
             output_sentence = "".join([tf.compat.as_str(rev_vocab[output]) for output in outputs])
             print("> %s" % output_sentence)
-            # for vec in fps:
-            #     print(vec, vec.shape)
             print("\n")
             if sentence == output_sentence:
                 exact_match_counter += 1
