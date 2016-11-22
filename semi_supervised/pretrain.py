@@ -13,7 +13,7 @@ from six.moves import xrange  # pylint: disable=redefined-builtin
 import tensorflow as tf
 
 from tensorflow.models.rnn.translate import data_utils
-from tensorflow.models.rnn.translate import seq2seq_model
+from . import seq2seq_model
 
 
 from .data import get_vocabulary, DEFAULT_DATA_DIR, smile_tokenizer
@@ -25,6 +25,7 @@ tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
                           "Learning rate decays by this much.")
 tf.app.flags.DEFINE_float("max_gradient_norm", 5.0,
                           "Clip gradients to this norm.")
+tf.app.flags.DEFINE_float("dropout", 0.75, "Keep probability of dropout.")
 tf.app.flags.DEFINE_integer("batch_size", 256,
                             "Batch size to use during training.")
 tf.app.flags.DEFINE_integer("size", 256, "Size of each model layer.")
@@ -114,7 +115,8 @@ def create_model(session, forward_only):
         FLAGS.learning_rate,
         FLAGS.learning_rate_decay_factor,
         forward_only=forward_only,
-        dtype=dtype)
+        dtype=dtype,
+        dropout_rate=FLAGS.dropout)
     if not os.path.exists(FLAGS.train_dir):
         os.makedirs(FLAGS.train_dir)
     ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
