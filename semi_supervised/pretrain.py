@@ -20,10 +20,12 @@ from .data import get_vocabulary, DEFAULT_DATA_DIR, smile_tokenizer
 
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
+tf.app.flags.DEFINE_boolean("reset_learning_rate", False, "If reset learning rate.")
 tf.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
                           "Learning rate decays by this much.")
 tf.app.flags.DEFINE_float("max_gradient_norm", 5.0,
                           "Clip gradients to this norm.")
+tf.app.flags.DEFINE_float("dropout", 0.5, "Keep probability of dropout.")
 tf.app.flags.DEFINE_integer("batch_size", 256,
                             "Batch size to use during training.")
 tf.app.flags.DEFINE_integer("size", 256, "Size of each model layer.")
@@ -39,6 +41,7 @@ tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
                             "How many training steps to do per checkpoint.")
 tf.app.flags.DEFINE_boolean("decode", False,
                             "Set to True for interactive decoding.")
+tf.app.flags.DEFINE_boolean("train_with_dev", True, "Train with dev set.")
 tf.app.flags.DEFINE_integer("decode_size", 10, "Set number of decode samples.")
 tf.app.flags.DEFINE_boolean("get_fp", False,
                             "If true, output all fingerprint in logp data.")
@@ -113,7 +116,8 @@ def create_model(session, forward_only):
         FLAGS.learning_rate,
         FLAGS.learning_rate_decay_factor,
         forward_only=forward_only,
-        dtype=dtype)
+        dtype=dtype,
+        dropout_rate=FLAGS.dropout)
     if not os.path.exists(FLAGS.train_dir):
         os.makedirs(FLAGS.train_dir)
     ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
@@ -137,12 +141,18 @@ def train():
         # Create model.
         print("Creating %d layers of %d units." % (FLAGS.num_layers, FLAGS.size))
         model = create_model(sess, False)
+        if FLAGS.reset_learning_rate:
+            print("Resetting learning rate to %.8f" % FLAGS.learning_rate)
+            sess.run([tf.assign(model.learning_rate, FLAGS.learning_rate)])
 
         # Read data into buckets and compute their sizes.
         print ("Reading development and training data (limit: %d)."
                % FLAGS.max_train_data_size)
         dev_set = read_data(dev_path)
         train_set = read_data(train_path, FLAGS.max_train_data_size)
+        if FLAGS.train_with_dev:
+            print("Training with development (testing) set for pretrain use...")
+            train_set = [a + b for a, b in zip(train_set, dev_set)]
         train_bucket_sizes = [len(train_set[b]) for b in xrange(len(_buckets))]
         train_total_size = float(sum(train_bucket_sizes))
 
@@ -248,8 +258,8 @@ def decode():
             encoder_inputs, decoder_inputs, target_weights = model.get_batch(
                 {bucket_id: [(token_ids, [])]}, bucket_id)
             # Get output logits for the sentence.
-            _, _, output_logits, fps = model.step(sess, encoder_inputs, decoder_inputs,
-                                                  target_weights, bucket_id, True, True)
+            _, _, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
+                                             target_weights, bucket_id, True)
             # This is a greedy decoder - outputs are just argmaxes of output_logits.
             outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
             # If there is an EOS symbol in outputs, cut them at that point.
@@ -258,8 +268,6 @@ def decode():
             # Print out French sentence corresponding to outputs.
             output_sentence = "".join([tf.compat.as_str(rev_vocab[output]) for output in outputs])
             print("> %s" % output_sentence)
-            # for vec in fps:
-            #     print(vec, vec.shape)
             print("\n")
             if sentence == output_sentence:
                 exact_match_counter += 1

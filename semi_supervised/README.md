@@ -11,6 +11,11 @@ python -m semi_supervised.data
 python -m semi_supervised.pretrain
 ```
 
+You can also do pretrain on both development and training set.
+```bash
+python -m semi_supervised.pretrain --train_with_dev
+```
+
 Sample Output:
 
 ```
