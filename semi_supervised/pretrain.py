@@ -41,6 +41,7 @@ tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
                             "How many training steps to do per checkpoint.")
 tf.app.flags.DEFINE_boolean("decode", False,
                             "Set to True for interactive decoding.")
+tf.app.flags.DEFINE_boolean("train_with_dev", True, "Train with dev set.")
 tf.app.flags.DEFINE_integer("decode_size", 10, "Set number of decode samples.")
 tf.app.flags.DEFINE_boolean("get_fp", False,
                             "If true, output all fingerprint in logp data.")
@@ -149,6 +150,9 @@ def train():
                % FLAGS.max_train_data_size)
         dev_set = read_data(dev_path)
         train_set = read_data(train_path, FLAGS.max_train_data_size)
+        if FLAGS.train_with_dev:
+            print("Training with development (testing) set for pretrain use...")
+            train_set = [a + b for a, b in zip(train_set, dev_set)]
         train_bucket_sizes = [len(train_set[b]) for b in xrange(len(_buckets))]
         train_total_size = float(sum(train_bucket_sizes))
 
