@@ -1,9 +1,45 @@
 # Prepare data
 
+Update: Change to new interfaces. New usage:
+
+## Build vocabulary
+
+Use the `build_vocab` switch to turn on building vocabulary functionality.
+
 ```bash
-python -m semi_supervised.data
+python -m semi_supervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/test/pretrain/pm2.vocab --out_path ~/expr/test/pretrain/pm2.tokens
 ```
 
+Example Output:
+```
+Creating temp file...
+Building vocabulary...
+Creating vocabulary /home/username/expr/test/pretrain/pm2.vocab from data /tmp/tmpcYVqV0
+  processing line 100000
+  processing line 200000
+  processing line 300000
+Translating vocabulary to tokens...
+Tokenizing data in /tmp/tmpcYVqV0
+  tokenizing line 100000
+  tokenizing line 200000
+  tokenizing line 300000
+```
+
+## Translate the SMI file using existing vocabulary
+
+Switch off `build_vocab` option, or simply hide it from the command line.
+
+```bash
+python -m semi_supervised.data --smi_path /smile/nfs/projects/nih_drug/data/logp/logp.smi --vocab_path ~/expr/test/pretrain/pm2.vocab --out_path ~/expr/test/pretrain/logp.tokens
+```
+
+Example Output:
+```
+Creating temp file...
+Reading vocabulary...
+Translating vocabulary to tokens...
+Tokenizing data in /tmp/tmpmP8R_P
+```
 
 # Train 
 
