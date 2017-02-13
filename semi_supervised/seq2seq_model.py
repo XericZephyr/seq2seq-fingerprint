@@ -249,4 +249,4 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel):
                 return None, outputs[0], outputs[1:1+decoder_size], outputs[1+decoder_size:]
             else:
                 # No gradient norm, loss, outputs.
-                return None, outputs[0], outputs[1:1+decoder_size] 
+                return None, outputs[0], outputs[1:1+decoder_size]
