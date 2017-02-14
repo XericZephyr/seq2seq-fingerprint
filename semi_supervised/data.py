@@ -14,6 +14,8 @@ from .utils import get_vocabulary, smile_tokenizer
 tf.app.flags.DEFINE_string(
     "smi_path", "/smile/nfs/projects/nih_drug/data/logp/logp.smi", "smi data path.")
 tf.app.flags.DEFINE_string(
+    "tmp_path", "", "Temporary data path. If none, a named temporary file will be used.")
+tf.app.flags.DEFINE_string(
     "vocab_path", "", "Vocabulary data_path.")
 tf.app.flags.DEFINE_string(
     "out_path", "", "Output token path.")
@@ -68,7 +70,7 @@ def build_vocab(smi_path=FLAGS.smi_path,
         check_output_path(out_path)
 
     with tempfile.NamedTemporaryFile() as tmp_file:
-        tmp_path = tmp_file.name
+        tmp_path = FLAGS.tmp_path or tmp_file.name
 
         data_iter = smi_data_iter(smi_path)
         print("Creating temp file...")
@@ -89,7 +91,7 @@ def translate_tokens(smi_path=FLAGS.smi_path,
     check_output_path(out_path)
 
     with tempfile.NamedTemporaryFile() as tmp_file:
-        tmp_path = tmp_file.name
+        tmp_path = FLAGS.tmp_path or tmp_file.name
 
         data_iter = smi_data_iter(smi_path)
         print("Creating temp file...")
