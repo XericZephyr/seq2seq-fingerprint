@@ -5,9 +5,10 @@ from __future__ import print_function
 import os
 import tempfile
 
-from tensorflow.models.rnn.translate.data_utils import (
-    create_vocabulary, initialize_vocabulary, data_to_token_ids)
+from tensorflow.models.rnn.translate.data_utils import data_to_token_ids
 import tensorflow as tf
+
+from .utils import get_vocabulary, smile_tokenizer
 
 
 tf.app.flags.DEFINE_string(
@@ -21,9 +22,6 @@ tf.app.flags.DEFINE_bool(
     "If true, the script will build vocabulary and then translating.")
 
 FLAGS = tf.app.flags.FLAGS
-
-MAX_SMILE_VOCAB_TOKEN = 10000
-
 
 def mkdirp(dir_path):
     """Error-free version of os.makedirs."""
@@ -48,18 +46,6 @@ def build_data_tmp(data_iter, data_path):
     with open(data_path, "w+") as fobj:
         for _smile in data_iter:
             fobj.write("%s\n" % _smile)
-
-def smile_tokenizer(line):
-    """Return each non-empty character as the token."""
-    return list(line.strip().replace(" ", ""))
-
-def get_vocabulary(data_path, vocab_path):
-    """Get the vocabulary for specific data temp file. If not, create one."""
-    # Create vocabulary if needed.
-    create_vocabulary(vocab_path, data_path, MAX_SMILE_VOCAB_TOKEN,
-                      tokenizer=smile_tokenizer, normalize_digits=False)
-    # Return the create vocabulary.
-    return initialize_vocabulary(vocab_path)
 
 def check_output_path(path):
     """Create folder if not exists."""
