@@ -36,7 +36,7 @@ tf.app.flags.DEFINE_string("vocab_path", os.path.join(DEFAULT_DATA_DIR, "pm2.voc
 tf.app.flags.DEFINE_string("train_dir", os.path.join(DEFAULT_DATA_DIR, "train"),
                            "Training directory.")
 tf.app.flags.DEFINE_string("dev_file", "logp.tmp", "Development file.")
-tf.app.flags.DEFINE_string("fp_file", "logp.tmp", 
+tf.app.flags.DEFINE_string("fp_file", "logp.fp", 
                            "Output fingerprint file. Will be place on data_dir.")
 tf.app.flags.DEFINE_integer("max_train_data_size", 0,
                             "Limit on the size of training data (0: no limit).")
@@ -124,7 +124,7 @@ def create_model(session, forward_only):
     if not os.path.exists(FLAGS.train_dir):
         os.makedirs(FLAGS.train_dir)
     ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
-    if ckpt and tf.gfile.Exists(ckpt.model_checkpoint_path):
+    if ckpt:
         print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
         model.saver.restore(session, ckpt.model_checkpoint_path)
     else:
@@ -133,7 +133,7 @@ def create_model(session, forward_only):
     return model
 
 
-def train():
+def train(): # pylint: disable=too-many-locals
     """Train a SMILE-SMILE autoencoder model using WMT data."""
     # Prepare WMT data.
     print("Preparing LogP and PM2 data in %s..." % FLAGS.data_dir)
@@ -190,7 +190,7 @@ def train():
             if current_step % FLAGS.steps_per_checkpoint == 0:
                 # Print statistics for the previous epoch.
                 perplexity = math.exp(float(loss)) if loss < 300 else float("inf")
-                print ("global step %d learning rate %.4f step-time %.2f perplexity "
+                print ("global step %d learning rate %.4f step-time %.6f perplexity "
                        "%.6f" % (model.global_step.eval(), model.learning_rate.eval(),
                                  step_time, perplexity))
                 # Decrease learning rate if no improvement was seen over last 3 times.
@@ -245,7 +245,7 @@ def decode(): # pylint: disable=too-many-locals
         exact_match_counter = 0
         for sentence in sentences:
             print(": %s" % sentence)
-            # Get token-ids for the input sentence.
+            # Get token-ids for the input sentence.s
             token_ids = data_utils.sentence_to_token_ids(
                 tf.compat.as_bytes(sentence), vocab,
                 tokenizer=smile_tokenizer, normalize_digits=False)
