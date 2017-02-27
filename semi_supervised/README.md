@@ -7,7 +7,7 @@ Update: Change to new interfaces. New usage:
 Use the `build_vocab` switch to turn on building vocabulary functionality.
 
 ```bash
-python -m semi_supervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/test/pretrain/pm2.vocab --out_path ~/expr/test/pretrain/pm2.tokens
+python -m semi_supervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
 ```
 
 Example Output:
@@ -30,7 +30,7 @@ Tokenizing data in /tmp/tmpcYVqV0
 Switch off `build_vocab` option, or simply hide it from the command line.
 
 ```bash
-python -m semi_supervised.data --smi_path /smile/nfs/projects/nih_drug/data/logp/logp.smi --vocab_path ~/expr/test/pretrain/pm2.vocab --out_path ~/expr/test/pretrain/logp.tokens
+python -m semi_supervised.data --smi_path /smile/nfs/projects/nih_drug/data/logp/logp.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
 ```
 
 Example Output:

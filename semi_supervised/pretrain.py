@@ -211,7 +211,7 @@ def train(): # pylint: disable=too-many-locals
                     _, eval_loss, _ = model.step(sess, encoder_inputs, decoder_inputs,
                                                  target_weights, bucket_id, True)
                     eval_ppx = math.exp(float(eval_loss)) if eval_loss < 300 else float("inf")
-                    print("  eval: bucket %d perplexity %.2f" % (bucket_id, eval_ppx))
+                    print("  eval: bucket %d perplexity %.6f" % (bucket_id, eval_ppx))
                 sys.stdout.flush()
 
 
