@@ -7,7 +7,7 @@ Update: Change to new interfaces. New usage:
 Use the `build_vocab` switch to turn on building vocabulary functionality.
 
 ```bash
-python -m semi_supervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
+python -m unsupervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
 ```
 
 Example Output:
@@ -30,7 +30,7 @@ Tokenizing data in /tmp/tmpcYVqV0
 Switch off `build_vocab` option, or simply hide it from the command line.
 
 ```bash
-python -m semi_supervised.data --smi_path /smile/nfs/projects/nih_drug/data/logp/logp.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
+python -m unsupervised.data --smi_path /smile/nfs/projects/nih_drug/data/logp/logp.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
 ```
 
 Example Output:
@@ -43,18 +43,18 @@ Tokenizing data in /tmp/tmpmP8R_P
 
 Another example
 ```bash
-python -m semi_supervised.data --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2_10k/pm2_10k.smi --tmp_path ~/expr/test/pretrain/pm2_10k.tmp --vocab_path ~/expr/test/pretrain/pm2.vocab --out_path ~/expr/test/pretrain/pm2_10k.tokens
+python -m unsupervised.data --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2_10k/pm2_10k.smi --tmp_path ~/expr/test/pretrain/pm2_10k.tmp --vocab_path ~/expr/test/pretrain/pm2.vocab --out_path ~/expr/test/pretrain/pm2_10k.tokens
 ```
 
 # Train 
 
 ```bash
-python -m semi_supervised.pretrain
+python -m unsupervised.pretrain
 ```
 
 You can also do pretrain on both development and training set.
 ```bash
-python -m semi_supervised.pretrain --train_with_dev
+python -m unsupervised.pretrain --train_with_dev
 ```
 
 Sample Output:
@@ -77,7 +77,7 @@ global step 94400 learning rate 0.1849 step-time 0.36 perplexity 1.000107
 Specify `logp.tmp`, it will look into DATA_DIR to sample logp data from there.
 
 ```bash
-python -m semi_supervised.pretrain --decode 1 --decode_size 50 --dev_file logp.tmp
+python -m unsupervised.pretrain --decode 1 --decode_size 50 --dev_file logp.tmp
 ```
 
 Sample Output:
@@ -119,7 +119,7 @@ Exact match: 0/10
 # Generate all fingerprints for logp data
 
 ```bash
-python -m semi_supervised.pretrain --get_fp 1 --dev_file logp.tmp --fp_file logp.fp
+python -m unsupervised.pretrain --get_fp 1 --dev_file logp.tmp --fp_file logp.fp
 ```
 
 Sample Output:
