@@ -15,9 +15,9 @@ import tensorflow as tf
 from tensorflow.models.rnn.translate import data_utils
 from . import seq2seq_model
 
+from .utils import get_vocabulary, smile_tokenizer
 
-from .data import get_vocabulary, DEFAULT_DATA_DIR, smile_tokenizer
-
+DEFAULT_DATA_DIR = os.path.expanduser("~/expr/seq2seq-fp/pretrain/")
 
 tf.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
 tf.app.flags.DEFINE_boolean("reset_learning_rate", False, "If reset learning rate.")
@@ -30,11 +30,14 @@ tf.app.flags.DEFINE_integer("batch_size", 256,
                             "Batch size to use during training.")
 tf.app.flags.DEFINE_integer("size", 256, "Size of each model layer.")
 tf.app.flags.DEFINE_integer("num_layers", 3, "Number of layers in the model.")
-# tf.app.flags.DEFINE_string("data_dir", DEFAULT_DATA_DIR, "Data directory")
+tf.app.flags.DEFINE_string("data_dir", DEFAULT_DATA_DIR, "Data directory")
 tf.app.flags.DEFINE_string("vocab_path", os.path.join(DEFAULT_DATA_DIR, "pm2.vocab"),
                            "Vocabulary path.")
 tf.app.flags.DEFINE_string("train_dir", os.path.join(DEFAULT_DATA_DIR, "train"),
                            "Training directory.")
+tf.app.flags.DEFINE_string("dev_file", "logp.tmp", "Development file.")
+tf.app.flags.DEFINE_string("fp_file", "logp.fp", 
+                           "Output fingerprint file. Will be place on data_dir.")
 tf.app.flags.DEFINE_integer("max_train_data_size", 0,
                             "Limit on the size of training data (0: no limit).")
 tf.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
@@ -121,7 +124,7 @@ def create_model(session, forward_only):
     if not os.path.exists(FLAGS.train_dir):
         os.makedirs(FLAGS.train_dir)
     ckpt = tf.train.get_checkpoint_state(FLAGS.train_dir)
-    if ckpt and tf.gfile.Exists(ckpt.model_checkpoint_path):
+    if ckpt:
         print("Reading model parameters from %s" % ckpt.model_checkpoint_path)
         model.saver.restore(session, ckpt.model_checkpoint_path)
     else:
@@ -130,7 +133,7 @@ def create_model(session, forward_only):
     return model
 
 
-def train():
+def train(): # pylint: disable=too-many-locals
     """Train a SMILE-SMILE autoencoder model using WMT data."""
     # Prepare WMT data.
     print("Preparing LogP and PM2 data in %s..." % FLAGS.data_dir)
@@ -187,7 +190,7 @@ def train():
             if current_step % FLAGS.steps_per_checkpoint == 0:
                 # Print statistics for the previous epoch.
                 perplexity = math.exp(float(loss)) if loss < 300 else float("inf")
-                print ("global step %d learning rate %.4f step-time %.2f perplexity "
+                print ("global step %d learning rate %.4f step-time %.6f perplexity "
                        "%.6f" % (model.global_step.eval(), model.learning_rate.eval(),
                                  step_time, perplexity))
                 # Decrease learning rate if no improvement was seen over last 3 times.
@@ -208,17 +211,17 @@ def train():
                     _, eval_loss, _ = model.step(sess, encoder_inputs, decoder_inputs,
                                                  target_weights, bucket_id, True)
                     eval_ppx = math.exp(float(eval_loss)) if eval_loss < 300 else float("inf")
-                    print("  eval: bucket %d perplexity %.2f" % (bucket_id, eval_ppx))
+                    print("  eval: bucket %d perplexity %.6f" % (bucket_id, eval_ppx))
                 sys.stdout.flush()
 
 
-def decode():
+def decode(): # pylint: disable=too-many-locals
     """Decode function from logp data."""
 
     # Load vocabularies.
     vocab, rev_vocab = get_vocabulary(FLAGS.data_dir, FLAGS.vocab_path)
 
-    dev_path = os.path.join(FLAGS.data_dir, "logp.tmp")
+    dev_path = os.path.join(FLAGS.data_dir, FLAGS.dev_file)
     # Read data into buckets and compute their sizes.
     print ("Read development dataset...")
 
@@ -240,10 +243,9 @@ def decode():
         model.batch_size = 1  # We decode one sentence at a time.
 
         exact_match_counter = 0
-        
         for sentence in sentences:
             print(": %s" % sentence)
-            # Get token-ids for the input sentence.
+            # Get token-ids for the input sentence.s
             token_ids = data_utils.sentence_to_token_ids(
                 tf.compat.as_bytes(sentence), vocab,
                 tokenizer=smile_tokenizer, normalize_digits=False)
@@ -276,14 +278,14 @@ def decode():
         print("Exact match: %d/%d" % (exact_match_counter, FLAGS.decode_size))
 
 
-def get_fingerprint():
+def get_fingerprint(): # pylint: disable=too-many-locals
     """Get seq2seq fingerprint for logp data."""
 
     # Load vocabularies.
     vocab, rev_vocab = get_vocabulary(FLAGS.data_dir, FLAGS.vocab_path)
 
-    dev_path = os.path.join(FLAGS.data_dir, "logp.tmp")
-    output_path = os.path.join(FLAGS.data_dir, "logp.fp")
+    dev_path = os.path.join(FLAGS.data_dir, FLAGS.dev_file)
+    output_path = os.path.join(FLAGS.data_dir, FLAGS.fp_file)
     # Read data into buckets and compute their sizes.
     print ("Read development dataset...")
 
@@ -297,7 +299,7 @@ def get_fingerprint():
 
         counter = 0
         exact_match_counter = 0
-        
+
         for sentence in sentences:
             counter += 1
             # Get token-ids for the input sentence.
