@@ -349,12 +349,20 @@ def self_test_get_vocab_size():
     """Self test get_vocab_size."""
     print(get_vocab_size(FLAGS.vocab_path)) # Visual check, should be 42.
 
+def self_test_model_save_and_load():
+    """Self test save and load model."""
+    with tf.Session() as sess:
+        model = create_model(sess, False)
+        model_dir = os.path.join(os.path.expanduser("~/expr/test/"), "gru-3-256/")
+        model.save_model(os.path.join(model_dir, "model.json"),
+                         os.path.join(model_dir, "checkpoint"), sess=sess)
 
 def main(_):
     """Main function for the pretrain script."""
     if FLAGS.self_test:
-        self_test_read_data()
-        self_test_get_vocab_size()
+        # self_test_read_data()
+        # self_test_get_vocab_size()
+        print()
     elif FLAGS.decode:
         decode()
     elif FLAGS.get_fp:
