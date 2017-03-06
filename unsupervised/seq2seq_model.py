@@ -1,7 +1,10 @@
 """Seq2seq Model Extension in Seq2seq-fingerprint."""
+# pylint: disable=invalid-name
 
 from __future__ import print_function
 
+import json
+import os
 
 import numpy as np
 import tensorflow as tf
@@ -9,9 +12,17 @@ import tensorflow as tf
 from tensorflow.models.rnn.translate import seq2seq_model
 
 
-class Seq2SeqModel(seq2seq_model.Seq2SeqModel):
+class Seq2SeqModel(seq2seq_model.Seq2SeqModel): # pylint: disable=too-many-instance-attributes
+    """Customized seq2seq model for fingerprint method."""
 
-    def __init__(self,
+    MODEL_PARAMETER_FIELDS = [
+        # Feedforward parameters.
+        "source_vocab_size", "target_vocab_size", "buckets", "size", "num_layers", "dropout_rate",
+        # Training parameters.
+        "max_gradient_norm", "batch_size", "learning_rate", "learning_rate_decay_factor"
+    ]
+
+    def __init__(self, # pylint: disable=too-many-locals, too-many-arguments, super-init-not-called
                  source_vocab_size,
                  target_vocab_size,
                  buckets,
@@ -51,12 +62,17 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel):
         self.source_vocab_size = source_vocab_size
         self.target_vocab_size = target_vocab_size
         self.buckets = buckets
-        self.batch_size = batch_size
+        self.size = size
         self.num_layers = num_layers
-        self.learning_rate = tf.Variable(
-            float(learning_rate), trainable=False, dtype=dtype)
-        self.learning_rate_decay_op = self.learning_rate.assign(
-            self.learning_rate * learning_rate_decay_factor)
+        self.max_gradient_norm = max_gradient_norm
+        self.batch_size = batch_size
+        self.learning_rate = learning_rate
+        self.learning_rate_decay_factor = learning_rate_decay_factor
+        self.learning_rate_op = tf.Variable(
+            float(self.learning_rate), trainable=False, dtype=dtype)
+        self.learning_rate_decay_op = self.learning_rate_op.assign(
+            self.learning_rate_op * learning_rate_decay_factor)
+        self.dropout_rate = dropout_rate
         self.global_step = tf.Variable(0, trainable=False)
 
         # If we use sampled softmax, we need an output projection.
@@ -70,6 +86,7 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel):
             output_projection = (w, b)
 
             def sampled_loss(inputs, labels):
+                """Sampleed loss function."""
                 labels = tf.reshape(labels, [-1, 1])
                 # We need to compute the sampled_softmax_loss using 32bit floats to
                 # avoid numerical instabilities.
@@ -83,19 +100,19 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel):
             softmax_loss_function = sampled_loss
 
         # Create the internal multi-layer cell for our RNN.
-        
         if use_lstm:
             single_cell = tf.nn.rnn_cell.BasicLSTMCell(size)
         else:
-            single_cell = tf.nn.rnn_cell.GRUCell(size)
+            single_cell = tf.nn.rnn_cell.GRUCell(size) # pylint: disable=redefined-variable-type
         single_cell = tf.nn.rnn_cell.DropoutWrapper(
             single_cell, input_keep_prob=dropout_rate, output_keep_prob=dropout_rate)
         cell = single_cell
         if num_layers > 1:
-            cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * num_layers)
+            cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * num_layers) # pylint: disable=redefined-variable-type
 
         # The seq2seq function: we use embedding for the input and attention.
         def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
+            """Sequence to sequence function."""
             return tf.nn.seq2seq.embedding_attention_seq2seq(
                 encoder_inputs,
                 decoder_inputs,
@@ -149,18 +166,64 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel):
         if not forward_only:
             self.gradient_norms = []
             self.updates = []
-            opt = tf.train.GradientDescentOptimizer(self.learning_rate)
+            opt = tf.train.GradientDescentOptimizer(self.learning_rate_op)
             for b in xrange(len(buckets)):
                 gradients = tf.gradients(self.losses[b], params)
-                clipped_gradients, norm = tf.clip_by_global_norm(gradients,
-                                                                 max_gradient_norm)
+                clipped_gradients, norm = tf.clip_by_global_norm(gradients, max_gradient_norm)
                 self.gradient_norms.append(norm)
                 self.updates.append(opt.apply_gradients(
                     zip(clipped_gradients, params), global_step=self.global_step))
 
-        self.saver = tf.train.Saver(tf.all_variables())
+        self.saver = tf.train.Saver(tf.global_variables())
 
+#
+#   Model load and save.
+#
 
+    @classmethod
+    def load_model_from_files(cls, model_file, checkpoint_dir, forward_only, sess=None):
+        """Load model from file."""
+        print("Loading seq2seq model definition from %s..." % model_file)
+        with open(model_file, "r") as fobj:
+            model_dict = json.load(fobj)
+        model_dict["forward_only"] = forward_only
+        model = cls(**model_dict)
+        # Load model weights.
+        ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
+        sess = sess or tf.get_default_session()
+        if ckpt:
+            print("Loading model weights from checkpoint_dir: %s" % checkpoint_dir)
+            model.saver.restore(sess, ckpt.model_checkpoint_path)
+        else:
+            print("Initialize fresh parameters...")
+            sess.run(tf.global_variables_initializer())
+        return model
+
+    @classmethod
+    def load_model_from_dir(cls, train_dir, forward_only, sess=None):
+        """Load model definition from train_dir/model.json and train_dir/weights."""
+        model_file = os.path.join(train_dir, "model.json")
+        checkpoint_dir = os.path.join(train_dir, "weights/")
+        return cls.load_model_from_files(model_file, checkpoint_dir, forward_only, sess)
+
+    def save_model_to_files(self, model_file, checkpoint_file, sess=None):
+        """Save all the model hyper-parameters to a json file."""
+        print("Save model defintion to %s..." % model_file)
+        model_dict = {key: getattr(self, key) for key in self.MODEL_PARAMETER_FIELDS}
+        with open(model_file, "w") as fobj:
+            json.dump(model_dict, fobj)
+        print("Save weights to %s..." % checkpoint_file)
+        sess = sess or tf.get_default_session()
+        self.saver.save(sess, checkpoint_file, global_step=self.global_step)
+
+    def save_model_to_dir(self, train_dir, sess=None):
+        """Save model definition and weights to train_dir/model.json and train_dir/checkpoints/"""
+        model_file = os.path.join(train_dir, "model.json")
+        checkpoint_dir = os.path.join(train_dir, "weights")
+        checkpoint_file = os.path.join(checkpoint_dir, "weights-ckpt")
+        if not os.path.exists(checkpoint_dir):
+            os.makedirs(checkpoint_dir)
+        self.save_model_to_files(model_file, checkpoint_file, sess=sess)
 
     def _get_encoder_state_names(self, bucket_id):
         """Get names of encoder_state."""
@@ -180,7 +243,7 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel):
         return encoder_state_names
 
 
-    def step(self, session, encoder_inputs, decoder_inputs, target_weights,
+    def step(self, session, encoder_inputs, decoder_inputs, target_weights, # pylint: disable=too-many-locals, too-many-arguments, too-many-branches, arguments-differ
              bucket_id, forward_only, output_encoder_states=False):
         """Run a step of the model feeding the given inputs.
 
