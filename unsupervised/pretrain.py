@@ -143,10 +143,13 @@ def train(): # pylint: disable=too-many-locals
     with tf.Session() as sess:
         # Create model.
         print("Creating %d layers of %d units." % (FLAGS.num_layers, FLAGS.size))
-        model = create_model(sess, False)
+        # model = create_model(sess, False)
+        model_dir = os.path.expanduser("~/expr/test/gru-3-256")
+        model = seq2seq_model.Seq2SeqModel.load_model_from_dir(
+            model_dir, False, sess=sess)
         if FLAGS.reset_learning_rate:
             print("Resetting learning rate to %.8f" % FLAGS.learning_rate)
-            sess.run([tf.assign(model.learning_rate, FLAGS.learning_rate)])
+            sess.run([tf.assign(model.learning_rate_op, FLAGS.learning_rate)])
 
         # Read data into buckets and compute their sizes.
         print ("Reading development and training data (limit: %d)."
@@ -191,15 +194,16 @@ def train(): # pylint: disable=too-many-locals
                 # Print statistics for the previous epoch.
                 perplexity = math.exp(float(loss)) if loss < 300 else float("inf")
                 print ("global step %d learning rate %.4f step-time %.6f perplexity "
-                       "%.6f" % (model.global_step.eval(), model.learning_rate.eval(),
+                       "%.6f" % (model.global_step.eval(), model.learning_rate_op.eval(),
                                  step_time, perplexity))
                 # Decrease learning rate if no improvement was seen over last 3 times.
                 if len(previous_losses) > 2 and loss > max(previous_losses[-3:]):
                     sess.run(model.learning_rate_decay_op)
                 previous_losses.append(loss)
                 # Save checkpoint and zero timer and loss.
-                checkpoint_path = os.path.join(FLAGS.train_dir, "seq2seq_pretrain.ckpt")
-                model.saver.save(sess, checkpoint_path, global_step=model.global_step)
+                # checkpoint_path = os.path.join(FLAGS.train_dir, "seq2seq_pretrain.ckpt")
+                model.saver.save(sess, os.path.join(model_dir, "weights/weights-ckpt"),
+                                 global_step=model.global_step)
                 step_time, loss = 0.0, 0.0
                 # Run evals on development set and print their perplexity.
                 for bucket_id in xrange(len(_buckets)):
