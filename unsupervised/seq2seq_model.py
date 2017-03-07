@@ -10,6 +10,9 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.models.rnn.translate import seq2seq_model
+from tensorflow.models.rnn.translate.data_utils import (
+    initialize_vocabulary, sentence_to_token_ids, EOS_ID)
+from .utils import smile_tokenizer
 
 
 class Seq2SeqModel(seq2seq_model.Seq2SeqModel): # pylint: disable=too-many-instance-attributes
@@ -313,3 +316,52 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel): # pylint: disable=too-many-insta
             else:
                 # No gradient norm, loss, outputs.
                 return None, outputs[0], outputs[1:1+decoder_size]
+
+
+class FingerprintFetcher(object):
+    """Seq2seq fingerprint fetcher for the seq2seq fingerprint."""
+
+    def __init__(self, model_dir, vocab_path, sess=None):
+        """Initialize a fingerprint fetcher for the seq2seq-fingerprint."""
+        self.model_dir = model_dir
+        self.vocab_path = vocab_path
+
+        # Load tensorflow model
+        self.model = Seq2SeqModel.load_model_from_dir(self.model_dir, True, sess)
+        self.model.batch_size = 1
+
+        # Load vocabulary.
+        self.vocab, self.rev_vocab = initialize_vocabulary(self.vocab_path)
+
+    def get_bucket_id(self, token_ids):
+        """Determine which bucket should the smile string be placed in."""
+        _buckets = self.model.buckets
+        bucket_id = len(_buckets) - 1
+        for i, bucket in enumerate(_buckets):
+            if bucket[0] >= len(token_ids):
+                bucket_id = i
+                break
+        return bucket_id
+
+    def decode(self, smile_string, sess=None): # pylint: disable=too-many-locals
+        """Input a smile string and will output the fingerprint and predicted output."""
+        token_ids = sentence_to_token_ids(
+            tf.compat.as_bytes(smile_string), self.vocab,
+            tokenizer=smile_tokenizer, normalize_digits=False)
+        bucket_id = self.get_bucket_id(token_ids)
+        # Get a 1-element batch to feed the sentence to the model.
+        encoder_inputs, decoder_inputs, target_weights = self.model.get_batch(
+            {bucket_id: [(token_ids, [])]}, bucket_id)
+        # Get output logits for the sentence.
+        sess = sess or tf.get_default_session()
+        _, _, output_logits, fps = self.model.step(sess, encoder_inputs, decoder_inputs,
+                                                   target_weights, bucket_id, True, True)
+        # This is a greedy decoder - outputs are just argmaxes of output_logits.
+        outputs = [int(np.argmax(logit, axis=1)) for logit in output_logits]
+        # If there is an EOS symbol in outputs, cut them at that point.
+        if EOS_ID in outputs:
+            outputs = outputs[:outputs.index(EOS_ID)]
+        output_smile = "".join([tf.compat.as_str(self.rev_vocab[output]) for output in outputs])
+        seq2seq_fp = np.concatenate(tuple([fp.flatten() for fp in fps]))
+        # return the fingerprint and predicted smile.
+        return seq2seq_fp, output_smile
