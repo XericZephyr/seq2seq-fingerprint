@@ -11,14 +11,14 @@ import smile as sm
 
 from unsupervised.seq2seq_model import FingerprintFetcher
 
+with sm.app.flags.Subcommand("sample", dest="action"):
+    sm.app.flags.DEFINE_string("data_path", "", "Data path of the sample.", required=True)
+    sm.app.flags.DEFINE_integer("sample_size", 100, "Sample size from the data file.")
+
 sm.app.flags.DEFINE_string("model_dir", "", "model path of the seq2seq fingerprint.",
                            required=True)
 sm.app.flags.DEFINE_string("vocab_path", "", "Vocabulary path of the seq2seq fingerprint.",
                            required=True)
-
-with sm.app.flags.Subcommand("sample", dest="action"):
-    sm.app.flags.DEFINE_string("data_path", "", "Data path of the sample.", required=True)
-    sm.app.flags.DEFINE_integer("sample_size", 100, "Sample size from the data file.")
 
 FLAGS = sm.app.flags.FLAGS
 
