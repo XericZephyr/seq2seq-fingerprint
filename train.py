@@ -94,18 +94,9 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
         print("Reading test data from %s..." % test_data)
         test_set = read_data(test_data, buckets)
 
-        # Subject to remove in the future.
-        # if FLAGS.train_with_dev:
-        #     print("Training with development (testing) set for pretrain use...")
-        #     train_set = [a + b for a, b in zip(train_set, test_set)]
         train_bucket_sizes = [len(train_set[b]) for b in xrange(len(buckets))]
         train_total_size = float(sum(train_bucket_sizes))
-
-        # A bucket scale is a list of increasing numbers from 0 to 1 that we'll use
-        # to select a bucket. Length of [scale[i], scale[i+1]] is proportional to
-        # the size if i-th training bucket, as used later.
-        train_buckets_scale = [sum(train_bucket_sizes[:i + 1]) / train_total_size
-                               for i in xrange(len(train_bucket_sizes))]
+        train_bucket_prob = [size / train_total_size for size in train_bucket_sizes]
 
         # This is the training loop.
         step_time, loss = 0.0, 0.0
@@ -114,9 +105,7 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
         while True:
             # Choose a bucket according to data distribution. We pick a random number
             # in [0, 1] and use the corresponding interval in train_buckets_scale.
-            random_number_01 = np.random.random_sample()
-            bucket_id = min([i for i in xrange(len(train_buckets_scale))
-                             if train_buckets_scale[i] > random_number_01])
+            bucket_id = np.random.choice(len(train_bucket_prob), p=train_bucket_prob)
 
             # Get a batch and make a step.
             start_time = time.time()
