@@ -3,6 +3,9 @@ Seq2Seq Fingerprint
 
 ## Example Usage
 
+
+### Decode
+
 ```bash
 python decode.py sample ~/expr/test/pretrain/pm2_10k.tmp ~/expr/test/gru-4-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab --sample_size 100 
 ```
@@ -25,4 +28,24 @@ Loading model weights from checkpoint_dir: /home/zhengxu/expr/test/gru-4-256/wei
 
 : CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
 > CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
+```
+
+### Train
+
+```bash
+python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 64
+```
+
+Example Output:
+```
+global step 145600 learning rate 0.1200 step-time 0.314016 perplexity 1.000712
+  eval: bucket 0 perplexity 1.001985
+  eval: bucket 1 perplexity 1.002438
+  eval: bucket 2 perplexity 1.000976
+  eval: bucket 3 perplexity 1.002733
+global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
+  eval: bucket 0 perplexity 1.003763
+  eval: bucket 1 perplexity 1.001052
+  eval: bucket 2 perplexity 1.000259
+  eval: bucket 3 perplexity 1.001401
 ```
