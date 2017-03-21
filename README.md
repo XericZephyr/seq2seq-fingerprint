@@ -7,7 +7,7 @@ Seq2Seq Fingerprint
 ### Decode
 
 ```bash
-python decode.py sample ~/expr/test/pretrain/pm2_10k.tmp ~/expr/test/gru-4-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab --sample_size 100 
+python decode.py sample ~/expr/test/pretrain/pm2_10k.tmp ~/expr/test/gru-4-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab --sample_size 100
 ```
 
 Example output:
