@@ -209,24 +209,30 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel): # pylint: disable=too-many-insta
         checkpoint_dir = os.path.join(train_dir, "weights/")
         return cls.load_model_from_files(model_file, checkpoint_dir, forward_only, sess)
 
-    def save_model_to_files(self, model_file, checkpoint_file, sess=None):
+    def save_model_to_files(self, model_file, checkpoint_file, sess=None, verbose=False):
         """Save all the model hyper-parameters to a json file."""
-        print("Save model defintion to %s..." % model_file)
+        if verbose:
+            print("Save model defintion to %s..." % model_file)
         model_dict = {key: getattr(self, key) for key in self.MODEL_PARAMETER_FIELDS}
         with open(model_file, "w") as fobj:
             json.dump(model_dict, fobj)
-        print("Save weights to %s..." % checkpoint_file)
-        sess = sess or tf.get_default_session()
-        self.saver.save(sess, checkpoint_file, global_step=self.global_step)
+        checkpoint_dir = os.path.dirname(checkpoint_file)
+        if os.path.exists(checkpoint_dir):
+            if verbose:
+                print("Save weights to %s..." % checkpoint_file)
+            sess = sess or tf.get_default_session()
+            self.saver.save(sess, checkpoint_file, global_step=self.global_step)
+        elif verbose:
+            print("Skip save weights to %s since the dir does not exist." % checkpoint_dir)
 
-    def save_model_to_dir(self, train_dir, sess=None):
+    def save_model_to_dir(self, train_dir, sess=None, verbose=False):
         """Save model definition and weights to train_dir/model.json and train_dir/checkpoints/"""
         model_file = os.path.join(train_dir, "model.json")
         checkpoint_dir = os.path.join(train_dir, "weights")
         checkpoint_file = os.path.join(checkpoint_dir, "weights-ckpt")
         if not os.path.exists(checkpoint_dir):
             os.makedirs(checkpoint_dir)
-        self.save_model_to_files(model_file, checkpoint_file, sess=sess)
+        self.save_model_to_files(model_file, checkpoint_file, sess=sess, verbose=verbose)
 
     def _get_encoder_state_names(self, bucket_id):
         """Get names of encoder_state."""
