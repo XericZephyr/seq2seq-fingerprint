@@ -1,13 +1,17 @@
 # seq2seq-fingerprint
 Seq2Seq Fingerprint
 
+## Installation
+
+We right now depend on the `tensorflow-gpu==0.12.0`. There are huge changes in tensorflow 1.0.1 and we yet have not resource to support it.
+
 ## Example Usage
 
 
 ### Decode
 
 ```bash
-python decode.py sample ~/expr/test/pretrain/pm2_10k.tmp ~/expr/test/gru-4-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab --sample_size 100 
+python decode.py sample ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab --sample_size 100
 ```
 
 Example output:

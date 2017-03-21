@@ -5,17 +5,16 @@ from __future__ import print_function
 
 import json
 import os
+import random
 
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.models.rnn.translate import seq2seq_model
-from tensorflow.models.rnn.translate.data_utils import (
-    initialize_vocabulary, sentence_to_token_ids, EOS_ID)
-from .utils import smile_tokenizer
+from .utils import (initialize_vocabulary, sentence_to_token_ids, smile_tokenizer, EOS_ID, PAD_ID,
+                    GO_ID)
 
 
-class Seq2SeqModel(seq2seq_model.Seq2SeqModel): # pylint: disable=too-many-instance-attributes
+class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
     """Customized seq2seq model for fingerprint method."""
 
     MODEL_PARAMETER_FIELDS = [
@@ -322,6 +321,66 @@ class Seq2SeqModel(seq2seq_model.Seq2SeqModel): # pylint: disable=too-many-insta
             else:
                 # No gradient norm, loss, outputs.
                 return None, outputs[0], outputs[1:1+decoder_size]
+
+    def get_batch(self, data, bucket_id): # pylint: disable=too-many-local-variables
+        """Get a random batch of data from the specified bucket, prepare for step.
+
+        To feed data in step(..) it must be a list of batch-major vectors, while
+        data here contains single length-major cases. So the main logic of this
+        function is to re-index data cases to be in the proper format for feeding.
+
+        Args:
+            data: a tuple of size len(self.buckets) in which each element contains
+                lists of pairs of input and output data that we use to create a batch.
+            bucket_id: integer, which bucket to get the batch for.
+
+        Returns:
+            The triple (encoder_inputs, decoder_inputs, target_weights) for
+            the constructed batch that has the proper format to call step(...) later.
+        """
+        encoder_size, decoder_size = self.buckets[bucket_id]
+        encoder_inputs, decoder_inputs = [], []
+
+        # Get a random batch of encoder and decoder inputs from data,
+        # pad them if needed, reverse encoder inputs and add GO to decoder.
+        for _ in xrange(self.batch_size):
+            encoder_input, decoder_input = random.choice(data[bucket_id])
+
+            # Encoder inputs are padded and then reversed.
+            encoder_pad = [PAD_ID] * (encoder_size - len(encoder_input))
+            encoder_inputs.append(list(reversed(encoder_input + encoder_pad)))
+
+            # Decoder inputs get an extra "GO" symbol, and are padded then.
+            decoder_pad_size = decoder_size - len(decoder_input) - 1
+            decoder_inputs.append([GO_ID] + decoder_input +
+                                  [PAD_ID] * decoder_pad_size)
+
+        # Now we create batch-major vectors from the data selected above.
+        batch_encoder_inputs, batch_decoder_inputs, batch_weights = [], [], []
+
+        # Batch encoder inputs are just re-indexed encoder_inputs.
+        for length_idx in xrange(encoder_size):
+            batch_encoder_inputs.append(
+                np.array([encoder_inputs[batch_idx][length_idx]
+                          for batch_idx in xrange(self.batch_size)], dtype=np.int32))
+
+        # Batch decoder inputs are re-indexed decoder_inputs, we create weights.
+        for length_idx in xrange(decoder_size):
+            batch_decoder_inputs.append(
+                    np.array([decoder_inputs[batch_idx][length_idx]
+                              for batch_idx in xrange(self.batch_size)], dtype=np.int32))
+
+            # Create target_weights to be 0 for targets that are padding.
+            batch_weight = np.ones(self.batch_size, dtype=np.float32)
+            for batch_idx in xrange(self.batch_size):
+                # We set weight to 0 if the corresponding target is a PAD symbol.
+                # The corresponding target is decoder_input shifted by 1 forward.
+                if length_idx < decoder_size - 1:
+                    target = decoder_inputs[batch_idx][length_idx + 1]
+                if length_idx == decoder_size - 1 or target == PAD_ID:
+                    batch_weight[batch_idx] = 0.0
+            batch_weights.append(batch_weight)
+        return batch_encoder_inputs, batch_decoder_inputs, batch_weights
 
 
 class FingerprintFetcher(object):
