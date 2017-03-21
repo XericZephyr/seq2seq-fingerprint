@@ -12,8 +12,7 @@ import numpy as np
 import tensorflow as tf
 import smile as sm
 
-from tensorflow.models.rnn.translate import data_utils
-
+from unsupervised.translate import data_utils
 from unsupervised import seq2seq_model
 
 # TODO: in the future we need to implement the build model option with data script.

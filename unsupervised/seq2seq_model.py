@@ -5,12 +5,13 @@ from __future__ import print_function
 
 import json
 import os
+import sys
 
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.models.rnn.translate import seq2seq_model
-from tensorflow.models.rnn.translate.data_utils import (
+from .translate import seq2seq_model
+from .translate.data_utils import (
     initialize_vocabulary, sentence_to_token_ids, EOS_ID)
 from .utils import smile_tokenizer
 

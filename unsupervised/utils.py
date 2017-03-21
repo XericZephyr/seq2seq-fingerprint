@@ -3,7 +3,7 @@
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.models.rnn.translate.data_utils import (
+from .translate.data_utils import (
     create_vocabulary, initialize_vocabulary)
 
 MAX_SMILE_VOCAB_TOKEN = 10000
