@@ -12,8 +12,8 @@ import numpy as np
 import tensorflow as tf
 import smile as sm
 
-from unsupervised.translate import data_utils
 from unsupervised import seq2seq_model
+from unsupervised.utils import EOS_ID
 
 # TODO: in the future we need to implement the build model option with data script.
 with sm.app.flags.Subcommand("build", dest="action"):
@@ -66,7 +66,7 @@ def read_data(source_path, buckets, max_size=None):
                 sys.stdout.flush()
             source_ids = [int(x) for x in source.split()]
             target_ids = [int(x) for x in source.split()]
-            target_ids.append(data_utils.EOS_ID)
+            target_ids.append(EOS_ID)
             for bucket_id, (source_size, target_size) in enumerate(buckets):
                 if len(source_ids) < source_size and len(target_ids) < target_size:
                     data_set[bucket_id].append([source_ids, target_ids])
