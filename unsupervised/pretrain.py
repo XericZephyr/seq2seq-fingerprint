@@ -245,7 +245,7 @@ def decode(): # pylint: disable=too-many-locals
         # Create model and load parameters.
         # model = create_model(sess, True)
         model = seq2seq_model.Seq2SeqModel.load_model_from_dir(
-            os.path.expanduser("~/expr/test/gru-3-256"), True, sess=sess)
+            os.path.expanduser("~/expr/test/gru-2-256"), True, sess=sess)
         model.batch_size = 1  # We decode one sentence at a time.
 
         exact_match_counter = 0
@@ -359,7 +359,7 @@ def self_test_model_save_and_load():
     """Self test save and load model."""
     with tf.Session() as sess:
         model = create_model(sess, False)
-        model_dir = os.path.join(os.path.expanduser("~/expr/test/"), "gru-3-256/")
+        model_dir = os.path.join(os.path.expanduser("~/expr/test/"), "gru-2-256/")
         model.save_model_to_dir(model_dir)
 
 def main(_):
