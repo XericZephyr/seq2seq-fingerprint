@@ -367,8 +367,8 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         # Batch decoder inputs are re-indexed decoder_inputs, we create weights.
         for length_idx in xrange(decoder_size):
             batch_decoder_inputs.append(
-                    np.array([decoder_inputs[batch_idx][length_idx]
-                              for batch_idx in xrange(self.batch_size)], dtype=np.int32))
+                np.array([decoder_inputs[batch_idx][length_idx]
+                          for batch_idx in xrange(self.batch_size)], dtype=np.int32))
 
             # Create target_weights to be 0 for targets that are padding.
             batch_weight = np.ones(self.batch_size, dtype=np.float32)
