@@ -44,7 +44,56 @@ python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab 
 
 Example Output:
 ```
-
+Progress: 200/10000
+Progress: 400/10000
+Progress: 600/10000
+Progress: 800/10000
+Progress: 1000/10000
+Progress: 1200/10000
+Progress: 1400/10000
+Progress: 1600/10000
+Progress: 1800/10000
+Progress: 2000/10000
+Progress: 2200/10000
+Progress: 2400/10000
+Progress: 2600/10000
+Progress: 2800/10000
+Progress: 3000/10000
+Progress: 3200/10000
+Progress: 3400/10000
+Progress: 3600/10000
+Progress: 3800/10000
+Progress: 4000/10000
+Progress: 4200/10000
+Progress: 4400/10000
+Progress: 4600/10000
+Progress: 4800/10000
+Progress: 5000/10000
+Progress: 5200/10000
+Progress: 5400/10000
+Progress: 5600/10000
+Progress: 5800/10000
+Progress: 6000/10000
+Progress: 6200/10000
+Progress: 6400/10000
+Progress: 6600/10000
+Progress: 6800/10000
+Progress: 7000/10000
+Progress: 7200/10000
+Progress: 7400/10000
+Progress: 7600/10000
+Progress: 7800/10000
+Progress: 8000/10000
+Progress: 8200/10000
+Progress: 8400/10000
+Progress: 8600/10000
+Progress: 8800/10000
+Progress: 9000/10000
+Progress: 9200/10000
+Progress: 9400/10000
+Progress: 9600/10000
+Progress: 9800/10000
+Exact match count: 9665/10000
 ```
 
 ### Train
