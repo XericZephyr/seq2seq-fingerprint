@@ -322,7 +322,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
                 # No gradient norm, loss, outputs.
                 return None, outputs[0], outputs[1:1+decoder_size]
 
-    def get_batch(self, data, bucket_id): # pylint: disable=too-many-local-variables
+    def get_batch(self, data, bucket_id): # pylint: disable=too-many-locals
         """Get a random batch of data from the specified bucket, prepare for step.
 
         To feed data in step(..) it must be a list of batch-major vectors, while
@@ -367,8 +367,8 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         # Batch decoder inputs are re-indexed decoder_inputs, we create weights.
         for length_idx in xrange(decoder_size):
             batch_decoder_inputs.append(
-                    np.array([decoder_inputs[batch_idx][length_idx]
-                              for batch_idx in xrange(self.batch_size)], dtype=np.int32))
+                np.array([decoder_inputs[batch_idx][length_idx]
+                          for batch_idx in xrange(self.batch_size)], dtype=np.int32))
 
             # Create target_weights to be 0 for targets that are padding.
             batch_weight = np.ones(self.batch_size, dtype=np.float32)
