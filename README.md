@@ -10,8 +10,10 @@ We right now depend on the `tensorflow-gpu==0.12.0`. There are huge changes in t
 
 ### Decode
 
+#### Sample
+
 ```bash
-python decode.py sample ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab --sample_size 100
+python decode.py sample ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
 ```
 
 Example output:
@@ -32,6 +34,17 @@ Loading model weights from checkpoint_dir: /home/zhengxu/expr/test/gru-4-256/wei
 
 : CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
 > CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
+```
+
+#### All FP
+
+```bash
+python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp ~/expr/test_2.fp
+```
+
+Example Output:
+```
+
 ```
 
 ### Train
