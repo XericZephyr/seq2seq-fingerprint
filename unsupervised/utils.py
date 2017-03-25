@@ -177,6 +177,20 @@ def smile_tokenizer(line):
     """Return each non-empty character as the token."""
     return list(line.strip().replace(" ", ""))
 
+def true_smile_tokenizer(line):
+    """Return each character or atom as the token."""
+    len_2_tokens = ["Cl", "Br"]
+    idx = 0
+    tokens = []
+    while idx < len(line):
+        if idx < len(line)-1 and line[idx:idx+2] in len_2_tokens:
+            tokens.append(line[idx:idx+2])
+            idx += 2
+            continue
+        tokens.append(line[idx])
+        idx += 1
+    return tokens
+
 def get_vocabulary(data_path, vocab_path):
     """Get the vocabulary for specific data temp file. If not, create one."""
     # Create vocabulary if needed.
