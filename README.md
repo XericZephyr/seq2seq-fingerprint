@@ -13,7 +13,7 @@ We right now depend on the `tensorflow-gpu==0.12.0`. There are huge changes in t
 #### Sample
 
 ```bash
-python decode.py sample ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
+python decode.py sample ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
 ```
 
 Example output:
@@ -120,6 +120,8 @@ From fresh
 
 ```bash
 python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
 ```
 
 Example output

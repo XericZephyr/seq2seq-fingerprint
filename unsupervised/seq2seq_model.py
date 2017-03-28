@@ -165,9 +165,11 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
 
         # Gradients and SGD update operation for training the model.
         params = tf.trainable_variables()
+        self.summary_ops = []
         if not forward_only:
             self.gradient_norms = []
             self.updates = []
+            lr_summary_op = tf.summary.scalar("learning rate", self.learning_rate_op)
             opt = tf.train.GradientDescentOptimizer(self.learning_rate_op)
             for b in xrange(len(buckets)):
                 gradients = tf.gradients(self.losses[b], params)
@@ -175,7 +177,11 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
                 self.gradient_norms.append(norm)
                 self.updates.append(opt.apply_gradients(
                     zip(clipped_gradients, params), global_step=self.global_step))
-
+                self.summary_ops.append(tf.summary.merge([
+                    tf.summary.scalar("global_norm_%d" % b, norm),
+                    tf.summary.scalar("loss_%d" % b, self.losses[b]),
+                    lr_summary_op
+                ]))
         self.saver = tf.train.Saver(tf.global_variables())
 
 #
@@ -311,10 +317,11 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
                     var = default_graph.get_tensor_by_name(state_name)
                     output_feed.append(var)
 
-        outputs = session.run(output_feed, input_feed)
         if not forward_only:
-            return outputs[1], outputs[2], None  # Gradient norm, loss, no outputs.
+            outputs, summary = session.run([output_feed, self.summary_ops[bucket_id]], input_feed)
+            return outputs[1], outputs[2], summary  # Gradient norm, loss, no outputs.
         else:
+            outputs = session.run(output_feed, input_feed)
             if output_encoder_states:
                  # No gradient norm, loss, outputs, encoder fixed vector.
                 return None, outputs[0], outputs[1:1+decoder_size], outputs[1+decoder_size:]
