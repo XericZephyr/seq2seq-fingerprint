@@ -13,7 +13,7 @@ We right now depend on the `tensorflow-gpu==0.12.0`. There are huge changes in t
 #### Sample
 
 ```bash
-python decode.py sample ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
+python decode.py sample ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
 ```
 
 Example output:
@@ -114,4 +114,26 @@ global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
   eval: bucket 1 perplexity 1.001052
   eval: bucket 2 perplexity 1.000259
   eval: bucket 3 perplexity 1.001401
+```
+
+From fresh
+
+```bash
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
+```
+
+Example output
+```
+global step 200 learning rate 0.5000 step-time 0.317007 perplexity 7.833510
+  eval: bucket 0 perplexity 32.720735
+  eval: bucket 1 perplexity 24.253715
+  eval: bucket 2 perplexity 16.619440
+  eval: bucket 3 perplexity 13.854121
+global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
+  eval: bucket 0 perplexity 31.408722
+  eval: bucket 1 perplexity 22.750650
+  eval: bucket 2 perplexity 15.665839
+  eval: bucket 3 perplexity 12.682373
 ```

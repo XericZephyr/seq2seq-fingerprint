@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import math
+import os
 import sys
 import time
 
@@ -36,6 +37,7 @@ with sm.app.flags.Subcommand("train", dest="action"):
                                 "Batch size to use during training.")
     sm.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
                                 "How many training steps to do per checkpoint.")
+    sm.app.flags.DEFINE_string("summary_dir", "", "Summary dir.")
 
 
 
@@ -100,6 +102,9 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
         step_time, loss = 0.0, 0.0
         current_step = 0
         previous_losses = []
+        if FLAGS.summary_dir:
+            train_writer = tf.summary.FileWriter(os.path.join(FLAGS.summary_dir, "train"),
+                                                 sess.graph)
         while True:
             # Choose a bucket according to data distribution. We pick a random number
             # in [0, 1] and use the corresponding interval in train_buckets_scale.
@@ -109,8 +114,10 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
             start_time = time.time()
             encoder_inputs, decoder_inputs, target_weights = model.get_batch(
                 train_set, bucket_id)
-            _, step_loss, _ = model.step(sess, encoder_inputs, decoder_inputs,
-                                         target_weights, bucket_id, False)
+            _, step_loss, summary = model.step(sess, encoder_inputs, decoder_inputs,
+                                               target_weights, bucket_id, False)
+            if FLAGS.summary_dir:
+                train_writer.add_summary(summary, model.global_step.eval())
             step_time += (time.time() - start_time) / FLAGS.steps_per_checkpoint
             loss += step_loss / FLAGS.steps_per_checkpoint
             current_step += 1
