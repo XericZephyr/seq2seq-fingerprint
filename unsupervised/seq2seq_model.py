@@ -195,6 +195,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         with open(model_file, "r") as fobj:
             model_dict = json.load(fobj)
         model_dict["forward_only"] = forward_only
+        model_dict["buckets"] = [tuple(_bucket) for _bucket in model_dict["buckets"]]
         model = cls(**model_dict)
         # Load model weights.
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
