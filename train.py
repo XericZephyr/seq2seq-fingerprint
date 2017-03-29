@@ -35,6 +35,8 @@ with sm.app.flags.Subcommand("train", dest="action"):
                                required=True)
     sm.app.flags.DEFINE_integer("batch_size", 128,
                                 "Batch size to use during training.")
+    sm.app.flags.DEFINE_integer("gpu", 0,
+                                "GPU device to use, default: 0.")
     sm.app.flags.DEFINE_integer("steps_per_checkpoint", 200,
                                 "How many training steps to do per checkpoint.")
     sm.app.flags.DEFINE_string("summary_dir", "", "Summary dir.")
@@ -81,10 +83,14 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
     model_dir = FLAGS.model_dir
     batch_size = FLAGS.batch_size
 
-    with tf.Session() as sess:
-        # Create model.
-        model = seq2seq_model.Seq2SeqModel.load_model_from_dir(
-            model_dir, False, sess=sess)
+    config = tf.ConfigProto(allow_soft_placement=True)
+    config.gpu_options.allow_growth = True
+
+    with tf.Session(config=config) as sess:
+        with tf.device("/gpu:%d" % FLAGS.gpu):
+            # Create model.
+            model = seq2seq_model.Seq2SeqModel.load_model_from_dir(
+                model_dir, False, sess=sess)
         buckets = model.buckets
         model.batch_size = batch_size
 
