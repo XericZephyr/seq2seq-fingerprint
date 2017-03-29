@@ -137,3 +137,12 @@ global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
   eval: bucket 2 perplexity 15.665839
   eval: bucket 3 perplexity 12.682373
 ```
+
+Debug
+```bash
+python train.py train ~/expr/unsup-seq2seq/models/debug/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug/summary/
+```
+Debug-Acc
+```bash
+python train.py train ~/expr/unsup-seq2seq/models/debug-acc/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug-acc/summary/
+```

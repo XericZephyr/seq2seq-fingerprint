@@ -14,7 +14,7 @@ import tensorflow as tf
 import smile as sm
 
 from unsupervised import seq2seq_model
-from unsupervised.utils import EOS_ID
+from unsupervised.utils import EOS_ID, PAD_ID
 
 # TODO: in the future we need to implement the build model option with data script.
 with sm.app.flags.Subcommand("build", dest="action"):
@@ -105,6 +105,35 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
         if FLAGS.summary_dir:
             train_writer = tf.summary.FileWriter(os.path.join(FLAGS.summary_dir, "train"),
                                                  sess.graph)
+            test_writer = tf.summary.FileWriter(os.path.join(FLAGS.summary_dir, "test"),
+                                                sess.graph)
+
+        # TODO(zhengxu): In the future, we should move this to seq2seq model class.
+        def get_em_acc_op(bucket_id):
+            """Create a em_acc_op."""
+            with tf.name_scope("EMAcc_%d" % bucket_id):
+                input_ph = tf.placeholder(tf.int64, shape=(None, batch_size))
+                output_ph = tf.placeholder(tf.float32, shape=(
+                    None, batch_size, model.target_vocab_size))
+                input_op = tf.reverse_v2(input_ph, axis=[0])
+                output_op = tf.argmax(output_ph, axis=2)
+                def replace_eos_with_pad(in_seq):
+                    """Replace all tokens after EOS in sequence with PAD."""
+                    out_seq = in_seq.copy()
+                    for idx in xrange(in_seq.shape[-1]):
+                        eos_list = in_seq[:, idx].reshape(in_seq.shape[0]).tolist()
+                        eos_idx = eos_list.index(EOS_ID) if EOS_ID in eos_list else -1
+                        out_seq[eos_idx:, idx] = PAD_ID
+                    return out_seq
+
+                eos_op = tf.py_func(replace_eos_with_pad, [output_op], tf.int64)
+                equal_op = tf.equal(tf.reduce_sum(tf.abs(input_op - eos_op), axis=0), 0)
+                em_acc_op = tf.reduce_mean(tf.cast(equal_op, tf.float32), axis=0)
+                summary_op = tf.summary.scalar("EMAccSummary", em_acc_op)
+            return input_ph, output_ph, em_acc_op, summary_op
+
+        test_summary_ops = [get_em_acc_op(bucket_id) for bucket_id in xrange(len(buckets))]
+
         while True:
             # Choose a bucket according to data distribution. We pick a random number
             # in [0, 1] and use the corresponding interval in train_buckets_scale.
@@ -121,6 +150,7 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
             step_time += (time.time() - start_time) / FLAGS.steps_per_checkpoint
             loss += step_loss / FLAGS.steps_per_checkpoint
             current_step += 1
+
 
             # Once in a while, we save checkpoint, print statistics, and run evals.
             if current_step % FLAGS.steps_per_checkpoint == 0:
@@ -143,10 +173,20 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
                         continue
                     encoder_inputs, decoder_inputs, target_weights = model.get_batch(
                         test_set, bucket_id)
-                    _, eval_loss, _ = model.step(sess, encoder_inputs, decoder_inputs,
-                                                 target_weights, bucket_id, True)
+                    _, eval_loss, output_logits = model.step(sess, encoder_inputs, decoder_inputs,
+                                                             target_weights, bucket_id, True)
+                    input_ph, output_ph, em_acc_op, summary_op = test_summary_ops[bucket_id]
+                    em_acc, summary = sess.run(
+                        [em_acc_op, summary_op],
+                        feed_dict={
+                            input_ph: np.array(encoder_inputs),
+                            output_ph: np.array(output_logits)})
+                    if FLAGS.summary_dir:
+                        test_writer.add_summary(summary, model.global_step.eval())
+
                     eval_ppx = math.exp(float(eval_loss)) if eval_loss < 300 else float("inf")
-                    print("  eval: bucket %d perplexity %.6f" % (bucket_id, eval_ppx))
+                    print("  eval: bucket %d perplexity %.6f, em_acc %.6f" % (
+                        bucket_id, eval_ppx, em_acc))
                 sys.stdout.flush()
 
 
