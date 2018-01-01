@@ -83,7 +83,7 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
     model_dir = FLAGS.model_dir
     batch_size = FLAGS.batch_size
 
-    config = tf.ConfigProto(allow_soft_placement=True)
+    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as sess:
@@ -174,7 +174,8 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
                 step_time, loss = 0.0, 0.0
                 # Run evals on development set and print their perplexity.
                 for bucket_id in xrange(len(buckets)):
-                    if len(test_set[bucket_id]) == 0:
+                    length_test_set = len(test_set[bucket_id])
+                    if length_test_set == 0:
                         print("  eval: empty bucket %d" % (bucket_id))
                         continue
                     encoder_inputs, decoder_inputs, target_weights = model.get_batch(
