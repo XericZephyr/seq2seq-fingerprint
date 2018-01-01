@@ -40,7 +40,7 @@ def sample_smiles(data_path, sample_size):
         sample_size_ori = sample_size
         sample_size = data_size
         print("decode :\nsample size %d is larger than data size %d,"
-              "data size %d is used as sample size" 
+              "data size %d is used as sample size"
               % (sample_size_ori, data_size, data_size))
     while len(samples) < sample_size:
         samples.add(random.randrange(len(lines)))
