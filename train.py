@@ -83,7 +83,7 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
     model_dir = FLAGS.model_dir
     batch_size = FLAGS.batch_size
 
-    config = tf.ConfigProto(allow_soft_placement=True, log_device_placement=True)
+    config = tf.ConfigProto(allow_soft_placement=True)
     config.gpu_options.allow_growth = True
 
     with tf.Session(config=config) as sess:
