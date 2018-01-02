@@ -6,7 +6,7 @@ from __future__ import print_function
 import re
 
 import tensorflow as tf
-from tensorflow.python.platform import gfile
+from tensorflow import gfile
 
 # pylint: disable=invalid-name
 
@@ -110,9 +110,7 @@ def initialize_vocabulary(vocabulary_path):
         rev_vocab = [tf.compat.as_bytes(line.strip()) for line in rev_vocab]
         vocab = dict([(x, y) for (y, x) in enumerate(rev_vocab)])
         return vocab, rev_vocab
-    else:
-        raise ValueError("Vocabulary file %s not found.", vocabulary_path)
-
+    raise ValueError("Vocabulary file %s not found." % vocabulary_path)
 
 def sentence_to_token_ids(sentence, vocabulary,
                           tokenizer=None, normalize_digits=True):

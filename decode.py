@@ -35,6 +35,13 @@ def sample_smiles(data_path, sample_size):
     samples = set()
     with open(data_path) as fobj:
         lines = [_line for _line in fobj.readlines() if len(_line.strip())]
+    data_size = len(lines)
+    if data_size < sample_size:
+        sample_size_ori = sample_size
+        sample_size = data_size
+        print("decode :\nsample size %d is larger than data size %d,"
+              "data size %d is used as sample size"
+              % (sample_size_ori, data_size, data_size))
     while len(samples) < sample_size:
         samples.add(random.randrange(len(lines)))
     return [lines[index].strip() for index in list(samples)]

@@ -4,11 +4,9 @@ from __future__ import print_function
 
 import os
 import tempfile
-
-from tensorflow.models.rnn.translate.data_utils import data_to_token_ids
 import tensorflow as tf
 
-from .utils import get_vocabulary, smile_tokenizer
+from .utils import get_vocabulary, smile_tokenizer, data_to_token_ids
 
 
 tf.app.flags.DEFINE_string(
@@ -38,7 +36,8 @@ def smi_data_iter(smi_path=FLAGS.smi_path):
     """Yield logp SMILE representation."""
     with open(smi_path) as fobj:
         for line in fobj:
-            if not len(line.strip()):
+            leng_line_strip = len(line.strip())
+            if not leng_line_strip:
                 continue
             _smile = line.strip().split()[0]
             yield _smile
