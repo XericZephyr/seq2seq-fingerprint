@@ -105,12 +105,12 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         if use_lstm:
             single_cell = tf.nn.rnn_cell.BasicLSTMCell(size)
         else:
-            single_cell = tf.nn.rnn_cell.GRUCell(size) # pylint: disable=redefined-variable-type
+            single_cell = tf.nn.rnn_cell.GRUCell(size)
         single_cell = tf.nn.rnn_cell.DropoutWrapper(
             single_cell, input_keep_prob=dropout_rate, output_keep_prob=dropout_rate)
         cell = single_cell
         if num_layers > 1:
-            cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * num_layers) # pylint: disable=redefined-variable-type
+            cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * num_layers)
 
         # The seq2seq function: we use embedding for the input and attention.
         def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
@@ -321,14 +321,12 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         if not forward_only:
             outputs, summary = session.run([output_feed, self.summary_ops[bucket_id]], input_feed)
             return outputs[1], outputs[2], summary  # Gradient norm, loss, no outputs.
-        else:
-            outputs = session.run(output_feed, input_feed)
-            if output_encoder_states:
-                 # No gradient norm, loss, outputs, encoder fixed vector.
-                return None, outputs[0], outputs[1:1+decoder_size], outputs[1+decoder_size:]
-            else:
-                # No gradient norm, loss, outputs.
-                return None, outputs[0], outputs[1:1+decoder_size]
+        outputs = session.run(output_feed, input_feed)
+        if output_encoder_states:
+            # No gradient norm, loss, outputs, encoder fixed vector.
+            return None, outputs[0], outputs[1:1+decoder_size], outputs[1+decoder_size:]
+        # No gradient norm, loss, outputs.
+        return None, outputs[0], outputs[1:1+decoder_size]
 
     def get_batch(self, data, bucket_id): # pylint: disable=too-many-locals
         """Get a random batch of data from the specified bucket, prepare for step.
