@@ -4,7 +4,6 @@ from __future__ import print_function
 
 import os
 import tempfile
-
 import tensorflow as tf
 
 from .utils import data_to_token_ids
