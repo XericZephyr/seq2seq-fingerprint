@@ -104,9 +104,6 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             softmax_loss_function = sampled_loss
 
         # Create the internal multi-layer cell for our RNN.
-#        def single_cell():
-#            """Creat the internal multi-layer cell (updated from tensorflow==0.12)"""
-#            return tf.contrib.rnn.GRUCell(size)
         if use_lstm:
             single_cell = tf.contrib.rnn.BasicLSTMCell(size)
         else:
