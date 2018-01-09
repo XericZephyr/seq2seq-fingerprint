@@ -1,11 +1,14 @@
 """Seq2seq Model Extension in Seq2seq-fingerprint."""
 # pylint: disable=invalid-name
 
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
 import json
 import os
 import random
+import copy
 
 import numpy as np
 import tensorflow as tf
@@ -16,7 +19,6 @@ from .utils import (initialize_vocabulary, sentence_to_token_ids, smile_tokenize
 
 class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
     """Customized seq2seq model for fingerprint method."""
-
     MODEL_PARAMETER_FIELDS = [
         # Feedforward parameters.
         "source_vocab_size", "target_vocab_size", "buckets", "size", "num_layers", "dropout_rate",
@@ -87,35 +89,39 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             b = tf.get_variable("proj_b", [self.target_vocab_size], dtype=dtype)
             output_projection = (w, b)
 
-            def sampled_loss(inputs, labels):
+            def sampled_loss(labels, logits):
                 """Sampleed loss function."""
                 labels = tf.reshape(labels, [-1, 1])
                 # We need to compute the sampled_softmax_loss using 32bit floats to
                 # avoid numerical instabilities.
                 local_w_t = tf.cast(w_t, tf.float32)
                 local_b = tf.cast(b, tf.float32)
-                local_inputs = tf.cast(inputs, tf.float32)
+                local_inputs = tf.cast(logits, tf.float32)
                 return tf.cast(
-                    tf.nn.sampled_softmax_loss(local_w_t, local_b, local_inputs, labels,
-                                               num_samples, self.target_vocab_size),
-                    dtype)
+                    tf.nn.sampled_softmax_loss(local_w_t, local_b, labels,
+                                               local_inputs, num_samples,
+                                               self.target_vocab_size), dtype)
             softmax_loss_function = sampled_loss
 
         # Create the internal multi-layer cell for our RNN.
+#        def single_cell():
+#            """Creat the internal multi-layer cell (updated from tensorflow==0.12)"""
+#            return tf.contrib.rnn.GRUCell(size)
         if use_lstm:
-            single_cell = tf.nn.rnn_cell.BasicLSTMCell(size)
+            single_cell = tf.contrib.rnn.BasicLSTMCell(size)
         else:
-            single_cell = tf.nn.rnn_cell.GRUCell(size)
-        single_cell = tf.nn.rnn_cell.DropoutWrapper(
-            single_cell, input_keep_prob=dropout_rate, output_keep_prob=dropout_rate)
-        cell = single_cell
+            single_cell = tf.contrib.rnn.GRUCell(size)
+        single_cell = tf.nn.rnn_cell.DropoutWrapper(single_cell, input_keep_prob=dropout_rate,
+                                                    output_keep_prob=dropout_rate)
+        cell_tmp = single_cell
         if num_layers > 1:
-            cell = tf.nn.rnn_cell.MultiRNNCell([single_cell] * num_layers)
+            cell_tmp = tf.contrib.rnn.MultiRNNCell([single_cell] * num_layers)
 
         # The seq2seq function: we use embedding for the input and attention.
         def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
             """Sequence to sequence function."""
-            return tf.nn.seq2seq.embedding_attention_seq2seq(
+            cell = copy.deepcopy(cell_tmp)
+            return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(
                 encoder_inputs,
                 decoder_inputs,
                 cell,
@@ -145,7 +151,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
 
         # Training outputs and losses.
         if forward_only:
-            self.outputs, self.losses = tf.nn.seq2seq.model_with_buckets(
+            self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
                 self.encoder_inputs, self.decoder_inputs, targets,
                 self.target_weights, buckets, lambda x, y: seq2seq_f(x, y, True),
                 softmax_loss_function=softmax_loss_function)
@@ -157,7 +163,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
                         for output in self.outputs[b]
                     ]
         else:
-            self.outputs, self.losses = tf.nn.seq2seq.model_with_buckets(
+            self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
                 self.encoder_inputs, self.decoder_inputs, targets,
                 self.target_weights, buckets,
                 lambda x, y: seq2seq_f(x, y, False),
@@ -248,12 +254,13 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             prefix = "model_with_buckets/embedding_attention_seq2seq_%d" % bucket_id
         if self.num_layers < 2:
             raise NotImplementedError("Cannot get state name for 1-layer RNN.")
-        cell_prefix = "%s/RNN/MultiRNNCell_%d" % (prefix, self.buckets[bucket_id][0]-1)
+        cell_prefix = "%s/rnn/rnn/embedding_wrapper/embedding_wrapper/"\
+        "multi_rnn_cell" % prefix
         encoder_state_names = [
-            "%s/Cell%d/%s/add:0" % (
+            "%s/cell_%d/%s/add:0" % (
                 cell_prefix,
                 cell_id,
-                "GRUCell" # In the future, we might have LSTM support.
+                "gru_cell" # In the future, we might have LSTM support.
             ) for cell_id in xrange(self.num_layers)]
         return encoder_state_names
 
@@ -322,11 +329,12 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             outputs, summary = session.run([output_feed, self.summary_ops[bucket_id]], input_feed)
             return outputs[1], outputs[2], summary  # Gradient norm, loss, no outputs.
         outputs = session.run(output_feed, input_feed)
-        if output_encoder_states:
+        if  output_encoder_states:
             # No gradient norm, loss, outputs, encoder fixed vector.
             return None, outputs[0], outputs[1:1+decoder_size], outputs[1+decoder_size:]
         # No gradient norm, loss, outputs.
         return None, outputs[0], outputs[1:1+decoder_size]
+
 
     def get_batch(self, data, bucket_id): # pylint: disable=too-many-locals
         """Get a random batch of data from the specified bucket, prepare for step.
