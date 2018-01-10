@@ -1,7 +1,7 @@
 This code implement sequence to sequence fingerprint The Zinc dataset can be used.
 
 Installation requirements
-  1.We right now depend on the tensorflow==1.4.1/tensorflow-gpu==1.3.0. #fix me.
+  1.We right now depend on the tensorflow==1.4.1/tensorflow-gpu==1.3.0.
   2.smile is required(for Ubuntu OS, pip install smile)
 
 References:
