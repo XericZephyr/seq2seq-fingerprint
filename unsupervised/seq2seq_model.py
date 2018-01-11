@@ -251,8 +251,8 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             prefix = "model_with_buckets/embedding_attention_seq2seq_%d" % bucket_id
         if self.num_layers < 2:
             raise NotImplementedError("Cannot get state name for 1-layer RNN.")
-        cell_prefix = "%s/rnn/rnn/embedding_wrapper/embedding_wrapper/"\
-        "multi_rnn_cell" % prefix
+        cell_prefix = '''%s/rnn/rnn/embedding_wrapper/embedding_wrapper/"
+        "multi_rnn_cell''' % prefix
         encoder_state_names = [
             "%s/cell_%d/%s/add:0" % (
                 cell_prefix,
@@ -326,7 +326,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             outputs, summary = session.run([output_feed, self.summary_ops[bucket_id]], input_feed)
             return outputs[1], outputs[2], summary  # Gradient norm, loss, no outputs.
         outputs = session.run(output_feed, input_feed)
-        if  output_encoder_states:
+        if output_encoder_states:
             # No gradient norm, loss, outputs, encoder fixed vector.
             return None, outputs[0], outputs[1:1+decoder_size], outputs[1+decoder_size:]
         # No gradient norm, loss, outputs.
