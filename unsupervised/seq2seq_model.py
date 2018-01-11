@@ -117,6 +117,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         # The seq2seq function: we use embedding for the input and attention.
         def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
             """Sequence to sequence function."""
+            #deep copy should be applied to handle both encode and decode process
             cell = copy.deepcopy(cell_tmp)
             return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(
                 encoder_inputs,
@@ -251,8 +252,8 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             prefix = "model_with_buckets/embedding_attention_seq2seq_%d" % bucket_id
         if self.num_layers < 2:
             raise NotImplementedError("Cannot get state name for 1-layer RNN.")
-        cell_prefix = '''%s/rnn/rnn/embedding_wrapper/embedding_wrapper/"
-        "multi_rnn_cell''' % prefix
+        cell_prefix = ("%s/rnn/rnn/embedding_wrapper/embedding_wrapper/"
+                       "multi_rnn_cell" % prefix)
         encoder_state_names = [
             "%s/cell_%d/%s/add:0" % (
                 cell_prefix,
