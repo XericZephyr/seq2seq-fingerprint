@@ -110,19 +110,18 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             single_cell = tf.contrib.rnn.GRUCell(size)
         single_cell = tf.nn.rnn_cell.DropoutWrapper(single_cell, input_keep_prob=dropout_rate,
                                                     output_keep_prob=dropout_rate)
-        cell_tmp = single_cell
+        cell = single_cell
         if num_layers > 1:
-            cell_tmp = tf.contrib.rnn.MultiRNNCell([single_cell] * num_layers)
+            cell = tf.contrib.rnn.MultiRNNCell([single_cell] * num_layers)
 
         # The seq2seq function: we use embedding for the input and attention.
         def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
             """Sequence to sequence function."""
             #deep copy should be applied to handle both encode and decode process
-            cell = copy.deepcopy(cell_tmp)
             return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(
                 encoder_inputs,
                 decoder_inputs,
-                cell,
+                copy.deepcopy(cell),
                 num_encoder_symbols=source_vocab_size,
                 num_decoder_symbols=target_vocab_size,
                 embedding_size=size,
