@@ -7,18 +7,19 @@ This code implement sequence to sequence fingerprint The Zinc dataset can be use
 2.smile is required(for Ubuntu OS, pip install smile)
 
 ## References:
-Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA#1
+Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
 
 ## Directory structure:
-/unsupervised - source files with Python 2.7 grammar
-/data         - smile data we use (/smile/nfs/projects/nih_drug/data/ was used in our example)
-/demos        - bash script be used to submit jobs and running the program
+/unsupervised - source files with Python 2.7 grammar<br>
+/data         - smile data we use (/smile/nfs/projects/nih_drug/data/ was used in our example)<br>
+/demos        - bash script be used to submit jobs and running the program<br>
 
 ## Input and output path and files:
-smi_path   /smile/nfs/projects/nih_drug/data/pm2/pm2.smi  (input smile data for building vocab)
-vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab           (the path and file to save vocab)
-out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens            (the path and file to save tokens)
-tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp               (the path and file to temporary data)
+
+smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi  (input smile data for building vocab)<br>
+vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab           (the path and file to save vocab)<br>
+out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens            (the path and file to save tokens)<br>
+tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp               (the path and file to temporary data)<br>
 
 
 ## Running workflow:
@@ -101,7 +102,7 @@ global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
 ```
 
 ### Decode
-# model.json and weights in the subdirectory of ~/expr/test/gru-2-256/ are necessary to run decode
+ note: model.json and weights in the subdirectory of ~/expr/test/gru-2-256/ are necessary to run decode
 ```bash
 python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
 ```
