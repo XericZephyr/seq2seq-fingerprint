@@ -12,12 +12,12 @@ Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: A
 ## Directory structure:
 /unsupervised &nbsp; - source files with Python 2.7 grammar<br>
 /data         &nbsp;&emsp; - smile data (/smile/nfs/projects/nih_drug/data/ was used as an example)<br>
-/demos        &nbsp; - bash script to submit jobs and running the program<br>
+/demos        &nbsp; - bash script to submit jobs and run the program<br>
 
 ## Input and output path and files:
 
-smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi	&emsp; - input smile data for building vocab<br>
-vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &emsp;&emsp;&emsp; - directory to save vocab<br>
+smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi	&nbsp; - input smile data for building vocab<br>
+vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &nbsp;&emsp;&emsp; - directory to save vocab<br>
 out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens  &nbsp; &nbsp; - directory to save tokens<br>
 tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &nbsp;&nbsp; - directory to save temporary data<br>
 
