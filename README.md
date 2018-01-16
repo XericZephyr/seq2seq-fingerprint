@@ -1,5 +1,5 @@
 # seq2seq-fingerprint
-This code implement sequence to sequence fingerprint The Zinc dataset can be used.
+This code implements sequence to sequence fingerprint.
 
 ## Installation requirements
 
