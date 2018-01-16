@@ -10,16 +10,16 @@ This code implement sequence to sequence fingerprint The Zinc dataset can be use
 Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
 
 ## Directory structure:
-/unsupervised &emsp; - source files with Python 2.7 grammar<br>
+/unsupervised &nbsp; - source files with Python 2.7 grammar<br>
 /data         &nbsp;&emsp; - smile data we use (/smile/nfs/projects/nih_drug/data/ was used in our example)<br>
 /demos        &nbsp; - bash script be used to submit jobs and running the program<br>
 
 ## Input and output path and files:
 
 smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi	&emsp; - input smile data for building vocab<br>
-vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &emsp;&emsp;&emsp; - directory to save vocab<br>
-out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens  &emsp; &emsp; - directory to save tokens<br>
-tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp; - directory to save temporary data<br>
+vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &emsp;&emsp;&emsp;&emsp; - directory to save vocab<br>
+out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens  &emsp; &nbsp; - directory to save tokens<br>
+tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&nbsp; - directory to save temporary data<br>
 
 
 ## Running workflow:
