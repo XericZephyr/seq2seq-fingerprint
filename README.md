@@ -11,8 +11,8 @@ Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: A
 
 ## Directory structure:
 /unsupervised &nbsp; - source files with Python 2.7 grammar<br>
-/data         &emsp;&emsp; - smile data (/smile/nfs/projects/nih_drug/data/ was used as an example)<br>
-/demos        &emsp; - bash script to submit jobs and run the program<br>
+/data         &emsp;&emsp;&emsp; - smile data (/smile/nfs/projects/nih_drug/data/ was used as an example)<br>
+/demos        &emsp;&emsp; - bash script to submit jobs and run the program<br>
 
 ## Input and output path and files:
 
