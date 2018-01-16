@@ -16,10 +16,10 @@ Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: A
 
 ## Input and output path and files:
 
-smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi  (input smile data for building vocab)<br>
-vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab           (the path and file to save vocab)<br>
-out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens            (the path and file to save tokens)<br>
-tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp               (the path and file to temporary data)<br>
+smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi	&emsp; (input smile data for building vocab)<br>
+vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &emsp;&emsp;   (the path and file to save vocab)<br>
+out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens  &emsp;       (the path and file to save tokens)<br>
+tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;    (the path and file to temporary data)<br>
 
 
 ## Running workflow:
