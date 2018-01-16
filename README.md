@@ -81,7 +81,7 @@ global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
   eval: bucket 3 perplexity 1.001401
 ```
 #### From fresh
-(Note: run step "Prepare data" again to generate new weights and then put them in correct subdirectory, eg:unsup-seq2seq/models/gru-2-128)
+(Note: run step "Prepare data" again to generate new weights and then put them in the correct subdirectory, eg:unsup-seq2seq/models/gru-2-128)
 ```bash
 python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
 python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
