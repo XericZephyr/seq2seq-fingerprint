@@ -6,6 +6,10 @@ python:
 
 cache: pip
 
+branches:
+  only:
+    - master
+
 install:
   - pip install -r requirements.txt # for package.
   - pip install pylint # for lint test
