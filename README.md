@@ -23,7 +23,11 @@ tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&n
 
 
 ## Running workflow:
+### model.json example
+ ```bash
+ {"dropout_rate": 0.5, "learning_rate_decay_factor": 0.99, "buckets": [[30, 30], [60, 60], [90, 90]], "target_vocab_size": 41, "batch_size": 5, "source_vocab_size": 41, "num_layers": 2, "max_gradient_norm": 5.0, "learning_rate": 0.5, "size": 128}
 
+ ```
 ###  Prepare data
 
 #### Build vocabulary
@@ -31,7 +35,7 @@ tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&n
  Use the build_vocab switch to turn on building vocabulary functionality.
 
 ```bash
-   python -m unsupervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
+python -m unsupervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
 ```
 
 Example Output:
