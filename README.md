@@ -1,21 +1,115 @@
 # seq2seq-fingerprint
-Seq2Seq Fingerprint
+This code implements sequence to sequence fingerprint.
 
-## Installation
+## Installation requirements
 
-We right now depend on the `tensorflow-gpu==0.12.0`. There are huge changes in tensorflow 1.0.1 and we yet have not resource to support it.
+1.We right now depend on the tensorflow==1.4.1/tensorflow-gpu==1.3.0.<br>
+2.smile is required(for Ubuntu OS, pip install smile)
 
-## Example Usage
+## References:
+Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
+
+## Directory structure:
+/unsupervised &nbsp; - source files with Python 2.7 grammar<br>
+/data         &emsp;&emsp;&emsp; - smile data (/smile/nfs/projects/nih_drug/data/ was used as an example)<br>
+/demos        &emsp;&emsp; - bash script to submit jobs and run the program<br>
+
+## Input and output path and files:
+
+smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi	&emsp; - input smile data for building vocab<br>
+vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &emsp;&emsp;&emsp;&nbsp;&nbsp; - directory to save vocab<br>
+out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens  &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save tokens<br>
+tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save temporary data<br>
 
 
-### Decode
+## Running workflow:
+### model.json example
+ ```bash
+ {"dropout_rate": 0.5, "learning_rate_decay_factor": 0.99, "buckets": [[30, 30], [60, 60], [90, 90]], "target_vocab_size": 41, "batch_size": 5, "source_vocab_size": 41, "num_layers": 2, "max_gradient_norm": 5.0, "learning_rate": 0.5, "size": 128}
 
-#### Sample
+ ```
+###  Prepare data
+
+#### Build vocabulary
+
+ Use the build_vocab switch to turn on building vocabulary functionality.
 
 ```bash
-python decode.py sample ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
+python -m unsupervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
 ```
 
+Example Output:
+```
+Creating temp file...
+Building vocabulary...
+Creating vocabulary /home/username/expr/test/pretrain/pm2.vocab from data /tmp/tmpcYVqV0
+  processing line 100000
+  processing line 200000
+  processing line 300000
+Translating vocabulary to tokens...
+Tokenizing data in /tmp/tmpcYVqV0
+  tokenizing line 100000
+  tokenizing line 200000
+  tokenizing line 300000
+```
+
+#### If vocabulary already exsits
+  Translate the SMI file using existing vocabulary
+  Switch off build_vocab option, or simply hide it from the command line.
+
+```bash
+python -m unsupervised.data --smi_path /smile/nfs/projects/nih_drug/data/logp/logp.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
+```
+Example Output:
+```
+Creating temp file...
+Reading vocabulary...
+Translating vocabulary to tokens...
+Tokenizing data in /tmp/tmpmP8R_P
+```
+### Train
+```bash
+python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 64
+```
+Example Output:
+```
+global step 145600 learning rate 0.1200 step-time 0.314016 perplexity 1.000712
+  eval: bucket 0 perplexity 1.001985
+  eval: bucket 1 perplexity 1.002438
+  eval: bucket 2 perplexity 1.000976
+  eval: bucket 3 perplexity 1.002733
+global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
+  eval: bucket 0 perplexity 1.003763
+  eval: bucket 1 perplexity 1.001052
+  eval: bucket 2 perplexity 1.000259
+  eval: bucket 3 perplexity 1.001401
+```
+#### From fresh
+(Note: run step "Prepare data" again to generate new weights and then put them in the correct subdirectory, eg:unsup-seq2seq/models/gru-2-128)
+```bash
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
+```
+Example output
+```
+global step 200 learning rate 0.5000 step-time 0.317007 perplexity 7.833510
+  eval: bucket 0 perplexity 32.720735
+  eval: bucket 1 perplexity 24.253715
+  eval: bucket 2 perplexity 16.619440
+  eval: bucket 3 perplexity 13.854121
+global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
+  eval: bucket 0 perplexity 31.408722
+  eval: bucket 1 perplexity 22.750650
+  eval: bucket 2 perplexity 15.665839
+  eval: bucket 3 perplexity 12.682373
+```
+
+### Decode
+ note: model.json and weights in the subdirectory of ~/expr/test/gru-2-256/ are necessary to run decode
+```bash
+python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
+```
 Example output:
 ```
 Loading seq2seq model definition from /home/zhengxu/expr/test/gru-4-256/model.json...
@@ -35,12 +129,9 @@ Loading model weights from checkpoint_dir: /home/zhengxu/expr/test/gru-4-256/wei
 : CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
 > CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
 ```
-
 #### All FP
 
-```bash
 python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp ~/expr/test_2.fp
-```
 
 Example Output:
 ```
@@ -96,53 +187,32 @@ Progress: 9800/10000
 Exact match count: 9665/10000
 ```
 
-### Train
+### Generate all fingerprints for logp data
 
 ```bash
-python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 64
+python -m unsupervised.pretrain --get_fp 1 --dev_file logp.tmp --fp_file logp.fp
 ```
 
-Example Output:
+Sample Output:
 ```
-global step 145600 learning rate 0.1200 step-time 0.314016 perplexity 1.000712
-  eval: bucket 0 perplexity 1.001985
-  eval: bucket 1 perplexity 1.002438
-  eval: bucket 2 perplexity 1.000976
-  eval: bucket 3 perplexity 1.002733
-global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
-  eval: bucket 0 perplexity 1.003763
-  eval: bucket 1 perplexity 1.001052
-  eval: bucket 2 perplexity 1.000259
-  eval: bucket 3 perplexity 1.001401
+Reading model parameters from /tmp/seq2seq-fp/pretrain/train/seq2seq_pretrain.ckpt-94000
+Progress: 200/10851
+Progress: 400/10851
+Progress: 600/10851
+Progress: 800/10851
+Progress: 1000/10851
+[omit several lines...]
+Progress: 10400/10851
+Progress: 10600/10851
+Progress: 10800/10851
+Exact match: 8086/10851
 ```
-
-From fresh
-
-```bash
-python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
-python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
-python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
-```
-
-Example output
-```
-global step 200 learning rate 0.5000 step-time 0.317007 perplexity 7.833510
-  eval: bucket 0 perplexity 32.720735
-  eval: bucket 1 perplexity 24.253715
-  eval: bucket 2 perplexity 16.619440
-  eval: bucket 3 perplexity 13.854121
-global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
-  eval: bucket 0 perplexity 31.408722
-  eval: bucket 1 perplexity 22.750650
-  eval: bucket 2 perplexity 15.665839
-  eval: bucket 3 perplexity 12.682373
-```
-
-Debug
+### Note: you can use the following example to debug
 ```bash
 python train.py train ~/expr/unsup-seq2seq/models/debug/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug/summary/
-```
 Debug-Acc
+```
 ```bash
 python train.py train ~/expr/unsup-seq2seq/models/debug-acc/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug-acc/summary/
 ```
+
