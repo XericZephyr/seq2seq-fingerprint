@@ -8,7 +8,6 @@ from __future__ import print_function
 import json
 import os
 import random
-import copy
 
 import numpy as np
 import tensorflow as tf
@@ -104,24 +103,30 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             softmax_loss_function = sampled_loss
 
         # Create the internal multi-layer cell for our RNN.
-        if use_lstm:
-            single_cell = tf.contrib.rnn.BasicLSTMCell(size)
-        else:
-            single_cell = tf.contrib.rnn.GRUCell(size)
-        single_cell = tf.nn.rnn_cell.DropoutWrapper(single_cell, input_keep_prob=dropout_rate,
-                                                    output_keep_prob=dropout_rate)
-        cell = single_cell
-        if num_layers > 1:
-            cell = tf.contrib.rnn.MultiRNNCell([single_cell] * num_layers)
-
+        def single_cell():
+            """internal single cell for RNN"""
+            if use_lstm:
+                ret = tf.contrib.rnn.BasicLSTMCell(size)
+            else:
+                ret = tf.contrib.rnn.GRUCell(size)
+            ret = tf.nn.rnn_cell.DropoutWrapper(
+                ret,
+                input_keep_prob=dropout_rate,
+                output_keep_prob=dropout_rate)
+            return ret
         # The seq2seq function: we use embedding for the input and attention.
         def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
             """Sequence to sequence function."""
             #deep copy should be applied to handle both encode and decode process
+            cell = single_cell()
+            if num_layers > 1:
+                cell = tf.contrib.rnn.MultiRNNCell(
+                    [single_cell() for _ in xrange(num_layers)])
+            #deep copy should be applied to handle both encode and decode process
             return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(
                 encoder_inputs,
                 decoder_inputs,
-                copy.deepcopy(cell),
+                cell,
                 num_encoder_symbols=source_vocab_size,
                 num_decoder_symbols=target_vocab_size,
                 embedding_size=size,
@@ -253,11 +258,14 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             raise NotImplementedError("Cannot get state name for 1-layer RNN.")
         cell_prefix = ("%s/rnn/rnn/embedding_wrapper/embedding_wrapper/"
                        "multi_rnn_cell" % prefix)
+        n = self.buckets[bucket_id][0]-1
         encoder_state_names = [
-            "%s/cell_%d/%s/add:0" % (
+            "%s/cell_%d/cell_%d/%s/add%s:0" % (
                 cell_prefix,
                 cell_id,
-                "gru_cell" # In the future, we might have LSTM support.
+                cell_id,
+                "gru_cell", # In the future, we might have LSTM support.
+                "_%d" % n if n > 0 else ""
             ) for cell_id in xrange(self.num_layers)]
         return encoder_state_names
 
