@@ -2,11 +2,10 @@
 
 from __future__ import print_function
 
+import tensorflow as tf
 from smile import flags
-#from smile import logging
 
 from unsupervised.data import build_vocab, translate_tokens
-import tensorflow as tf
 
 
 flags.DEFINE_string(
