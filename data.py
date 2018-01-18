@@ -4,7 +4,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 from smile import flags
-
+import smile as sm
 from unsupervised.data import build_vocab, translate_tokens
 
 
@@ -30,4 +30,4 @@ def main(_):
         translate_tokens(FLAGS.smi_path, FLAGS.vocab_path, FLAGS.out_path, FLAGS.tmp_path)
 
 if __name__ == "__main__":
-    tf.app.run()
+    sm.app.run()
