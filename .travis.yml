@@ -13,3 +13,7 @@ install:
 script:
   - python -c "import tensorflow as tf;"
   - bash tests/run_tests.sh
+
+branches:
+  only:
+    - master
