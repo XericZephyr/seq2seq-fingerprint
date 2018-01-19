@@ -2,7 +2,6 @@
 
 from __future__ import print_function
 
-import tensorflow as tf
 from smile import flags
 import smile as sm
 from unsupervised.data import build_vocab, translate_tokens
