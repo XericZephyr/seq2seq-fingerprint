@@ -2,8 +2,8 @@
 
 from __future__ import print_function
 
-from smile import flags
 import smile as sm
+from smile import flags
 from unsupervised.data import build_vocab, translate_tokens
 
 

@@ -117,12 +117,10 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         # The seq2seq function: we use embedding for the input and attention.
         def seq2seq_f(encoder_inputs, decoder_inputs, do_decode):
             """Sequence to sequence function."""
-            #deep copy should be applied to handle both encode and decode process
             cell = single_cell()
             if num_layers > 1:
                 cell = tf.contrib.rnn.MultiRNNCell(
                     [single_cell() for _ in xrange(num_layers)])
-            #deep copy should be applied to handle both encode and decode process
             return tf.contrib.legacy_seq2seq.embedding_attention_seq2seq(
                 encoder_inputs,
                 decoder_inputs,
