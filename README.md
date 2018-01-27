@@ -9,12 +9,7 @@ This code implements sequence to sequence fingerprint.
 ## References:
 Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
 
-## Directory structure:
-/unsupervised &nbsp; - source files with Python 2.7 grammar<br>
-/data         &emsp;&emsp;&emsp; - smile data (/smile/nfs/projects/nih_drug/data/ was used as an example)<br>
-/demos        &emsp;&emsp; - bash script to submit jobs and run the program<br>
-
-## Input and output path and files:
+## Input and output files:
 
 smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi	&emsp; - input smile data for building vocab<br>
 vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &emsp;&emsp;&emsp;&nbsp;&nbsp; - directory to save vocab<br>
