@@ -12,9 +12,9 @@ import random
 import numpy as np
 import tensorflow as tf
 
+from para import param
 from .utils import (initialize_vocabulary, sentence_to_token_ids, smile_tokenizer, EOS_ID, PAD_ID,
                     GO_ID)
-
 
 class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
     """Customized seq2seq model for fingerprint method."""
@@ -26,20 +26,11 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
     ]
 
     def __init__(self, # pylint: disable=too-many-locals, too-many-arguments, super-init-not-called
-                 source_vocab_size,
-                 target_vocab_size,
-                 buckets,
-                 size,
-                 num_layers,
-                 max_gradient_norm,
-                 batch_size,
-                 learning_rate,
-                 learning_rate_decay_factor,
+                 hparams,
+                 forward_only=False,
                  use_lstm=False,
                  num_samples=512,
-                 forward_only=False,
-                 dtype=tf.float32,
-                 dropout_rate=0.75):
+                 dtype=tf.float32):
         """Create the model.
         Args:
             source_vocab_size: size of the source vocabulary.
@@ -62,28 +53,32 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             forward_only: if set, we do not construct the backward pass in the model.
             dtype: the data type to use to store internal variables.
         """
-        self.source_vocab_size = source_vocab_size
-        self.target_vocab_size = target_vocab_size
-        self.buckets = buckets
-        self.size = size
-        self.num_layers = num_layers
-        self.max_gradient_norm = max_gradient_norm
-        self.batch_size = batch_size
-        self.learning_rate = learning_rate
-        self.learning_rate_decay_factor = learning_rate_decay_factor
+        self.source_vocab_size = hparams.source_vocab_size
+        self.target_vocab_size = hparams.target_vocab_size
+        self.buckets = hparams.buckets
+        self.size = hparams.size
+        self.num_layers = hparams.num_layers
+        self.max_gradient_norm = hparams.max_gradient_norm
+        self.batch_size = hparams.batch_size
+        self.learning_rate = hparams.learning_rate
+        self.learning_rate_decay_factor = hparams.learning_rate_decay_factor
         self.learning_rate_op = tf.Variable(
             float(self.learning_rate), trainable=False, dtype=dtype)
         self.learning_rate_decay_op = self.learning_rate_op.assign(
-            self.learning_rate_op * learning_rate_decay_factor)
-        self.dropout_rate = dropout_rate
+            self.learning_rate_op * hparams.learning_rate_decay_factor)
+        self.dropout_rate = hparams.dropout_rate
         self.global_step = tf.Variable(0, trainable=False)
+
+        size = hparams.size
+        dropout_rate = hparams.dropout_rate
+        num_layers = hparams.num_layers
 
         # If we use sampled softmax, we need an output projection.
         output_projection = None
         softmax_loss_function = None
         # Sampled softmax only makes sense if we sample less than vocabulary size.
         if num_samples > 0 and num_samples < self.target_vocab_size:
-            w_t = tf.get_variable("proj_w", [self.target_vocab_size, size], dtype=dtype)
+            w_t = tf.get_variable("proj_w", [self.target_vocab_size, hparams.size], dtype=dtype)
             w = tf.transpose(w_t)
             b = tf.get_variable("proj_b", [self.target_vocab_size], dtype=dtype)
             output_projection = (w, b)
@@ -106,9 +101,9 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         def single_cell():
             """internal single cell for RNN"""
             if use_lstm:
-                ret = tf.contrib.rnn.BasicLSTMCell(size)
+                ret = tf.contrib.rnn.BasicLSTMCell(hparams.size)
             else:
-                ret = tf.contrib.rnn.GRUCell(size)
+                ret = tf.contrib.rnn.GRUCell(hparams.size)
             ret = tf.nn.rnn_cell.DropoutWrapper(
                 ret,
                 input_keep_prob=dropout_rate,
@@ -125,8 +120,8 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
                 encoder_inputs,
                 decoder_inputs,
                 cell,
-                num_encoder_symbols=source_vocab_size,
-                num_decoder_symbols=target_vocab_size,
+                num_encoder_symbols=hparams.source_vocab_size,
+                num_decoder_symbols=hparams.target_vocab_size,
                 embedding_size=size,
                 output_projection=output_projection,
                 feed_previous=do_decode,
@@ -136,10 +131,10 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         self.encoder_inputs = []
         self.decoder_inputs = []
         self.target_weights = []
-        for i in xrange(buckets[-1][0]):  # Last bucket is the biggest one.
+        for i in xrange(hparams.buckets[-1][0]):  # Last bucket is the biggest one.
             self.encoder_inputs.append(tf.placeholder(tf.int32, shape=[None],
                                                       name="encoder{0}".format(i)))
-        for i in xrange(buckets[-1][1] + 1):
+        for i in xrange(hparams.buckets[-1][1] + 1):
             self.decoder_inputs.append(tf.placeholder(tf.int32, shape=[None],
                                                       name="decoder{0}".format(i)))
             self.target_weights.append(tf.placeholder(dtype, shape=[None],
@@ -153,11 +148,11 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         if forward_only:
             self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
                 self.encoder_inputs, self.decoder_inputs, targets,
-                self.target_weights, buckets, lambda x, y: seq2seq_f(x, y, True),
+                self.target_weights, hparams.buckets, lambda x, y: seq2seq_f(x, y, True),
                 softmax_loss_function=softmax_loss_function)
             # If we use output projection, we need to project outputs for decoding.
             if output_projection is not None:
-                for b in xrange(len(buckets)):
+                for b in xrange(len(hparams.buckets)):
                     self.outputs[b] = [
                         tf.matmul(output, output_projection[0]) + output_projection[1]
                         for output in self.outputs[b]
@@ -165,7 +160,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         else:
             self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
                 self.encoder_inputs, self.decoder_inputs, targets,
-                self.target_weights, buckets,
+                self.target_weights, hparams.buckets,
                 lambda x, y: seq2seq_f(x, y, False),
                 softmax_loss_function=softmax_loss_function)
 
@@ -177,9 +172,10 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             self.updates = []
             lr_summary_op = tf.summary.scalar("learning rate", self.learning_rate_op)
             opt = tf.train.GradientDescentOptimizer(self.learning_rate_op)
-            for b in xrange(len(buckets)):
+            for b in xrange(len(hparams.buckets)):
                 gradients = tf.gradients(self.losses[b], params)
-                clipped_gradients, norm = tf.clip_by_global_norm(gradients, max_gradient_norm)
+                clipped_gradients, norm = tf.clip_by_global_norm(gradients,
+                                                                 hparams.max_gradient_norm)
                 self.gradient_norms.append(norm)
                 self.updates.append(opt.apply_gradients(
                     zip(clipped_gradients, params), global_step=self.global_step))
@@ -197,12 +193,13 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
     @classmethod
     def load_model_from_files(cls, model_file, checkpoint_dir, forward_only, sess=None):
         """Load model from file."""
+        hparams = param()
         print("Loading seq2seq model definition from %s..." % model_file)
         with open(model_file, "r") as fobj:
             model_dict = json.load(fobj)
-        model_dict["forward_only"] = forward_only
         model_dict["buckets"] = [tuple(_bucket) for _bucket in model_dict["buckets"]]
-        model = cls(**model_dict)
+        hparams.set_from_map(model_dict)
+        model = cls(hparams, forward_only)
         # Load model weights.
         ckpt = tf.train.get_checkpoint_state(checkpoint_dir)
         sess = sess or tf.get_default_session()

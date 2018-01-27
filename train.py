@@ -9,13 +9,13 @@ import os
 import sys
 import time
 
-import json
 import tensorflow as tf
 import smile as sm
 import numpy as np
 
 from unsupervised import seq2seq_model
 from unsupervised.utils import EOS_ID, PAD_ID
+from para import param
 
 with sm.app.flags.Subcommand("build", dest="action"):
     sm.app.flags.DEFINE_string("model_dir", "", "model path of the seq2seq fingerprint.",
@@ -25,18 +25,12 @@ with sm.app.flags.Subcommand("build", dest="action"):
     sm.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
     sm.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
                               "Learning rate decays by this much.")
-    sm.app.flags.DEFINE_float("max_gradient_norm", 5.0,
-                              "Clip gradients to this norm.")
-    sm.app.flags.DEFINE_float("dropout_rate", 0.5,
-                              "dropout rate")
-    sm.app.flags.DEFINE_string("buckets", "[[30, 30], [60, 60], [90, 90]]",
-                               "buckets")
-    sm.app.flags.DEFINE_integer("target_vocab_size", 41,
-                                "target vocab size")
-    sm.app.flags.DEFINE_integer("batch_size", 256,
-                                "dropout rate")
-    sm.app.flags.DEFINE_integer("source_vocab_size", 41,
-                                "source vocab size")
+    sm.app.flags.DEFINE_float("max_gradient_norm", 5.0, "Clip gradients to this norm.")
+    sm.app.flags.DEFINE_float("dropout_rate", 0.5, "dropout rate")
+    sm.app.flags.DEFINE_string("buckets", "[[30, 30], [60, 60], [90, 90]]", "buckets")
+    sm.app.flags.DEFINE_integer("target_vocab_size", 41, "target vocab size")
+    sm.app.flags.DEFINE_integer("batch_size", 256, "dropout rate")
+    sm.app.flags.DEFINE_integer("source_vocab_size", 41, "source vocab size")
 
 
 
@@ -59,19 +53,9 @@ with sm.app.flags.Subcommand("train", dest="action"):
 
 FLAGS = sm.app.flags.FLAGS
 
-def buildhparams():
-    """build hyper-paramters for model.json"""
-    hparams = tf.contrib.training.HParams(dropout_rate=FLAGS.dropout_rate,
-                                          num_layers=FLAGS.num_layers, size=FLAGS.size,
-                                          learning_rate=FLAGS.learning_rate,
-                                          learning_rate_decay_factor=
-                                          FLAGS.learning_rate_decay_factor,
-                                          buckets=json.loads(FLAGS.buckets),
-                                          target_vocab_size=FLAGS.target_vocab_size,
-                                          batch_size=FLAGS.batch_size,
-                                          source_vocab_size=FLAGS.source_vocab_size,
-                                          max_gradient_norm=FLAGS.max_gradient_norm)
-
+def build_hparams():
+    """build model.json using hyper-parameters"""
+    hparams = param()
     model_file = os.path.join(FLAGS.model_dir, "model.json")
     with open(model_file, "w") as fobj:
         fobj.write(hparams.to_json())
@@ -232,7 +216,7 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
 def main(_):
     """Entry function for the script."""
     if FLAGS.action == "build":
-        buildhparams()
+        build_hparams()
     elif FLAGS.action == "train":
         train(FLAGS.train_data, FLAGS.test_data)
     else:
