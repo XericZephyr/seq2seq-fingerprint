@@ -23,11 +23,7 @@ tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&n
 
 
 ## Running workflow:
-### model.json example
- ```bash
- {"dropout_rate": 0.5, "learning_rate_decay_factor": 0.99, "buckets": [[30, 30], [60, 60], [90, 90]], "target_vocab_size": 41, "batch_size": 5, "source_vocab_size": 41, "num_layers": 2, "max_gradient_norm": 5.0, "learning_rate": 0.5, "size": 128}
 
- ```
 ###  Prepare data
 
 #### Build vocabulary
@@ -35,7 +31,7 @@ tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&n
  Use the build_vocab switch to turn on building vocabulary functionality.
 
 ```bash
-python -m unsupervised.data --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
+python data.py --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
 ```
 
 Example Output:
@@ -68,6 +64,16 @@ Translating vocabulary to tokens...
 Tokenizing data in /tmp/tmpmP8R_P
 ```
 ### Train
+#### Build model(model.json)
+```bash
+python train.py build ~/expr/test/gru-2-256/
+```
+model.json example
+ ```bash
+ {"dropout_rate": 0.5, "learning_rate_decay_factor": 0.99, "buckets": [[30, 30], [60, 60], [90, 90]], "target_vocab_size": 41, "batch_size": 5, "source_vocab_size": 41, "num_layers": 2, "max_gradient_norm": 5.0, "learning_rate": 0.5, "size": 128}
+
+ ```
+#### train model
 ```bash
 python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 64
 ```
@@ -84,8 +90,8 @@ global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
   eval: bucket 2 perplexity 1.000259
   eval: bucket 3 perplexity 1.001401
 ```
-#### From fresh
-(Note: run step "Prepare data" again to generate new weights and then put them in the correct subdirectory, eg:unsup-seq2seq/models/gru-2-128)
+#### Train from fresh
+(Note: delte old weights folder before training from fresh)
 ```bash
 python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
 python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
@@ -106,7 +112,7 @@ global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
 ```
 
 ### Decode
- note: model.json and weights in the subdirectory of ~/expr/test/gru-2-256/ are necessary to run decode
+ (note: model.json and weights in the subdirectory of ~/expr/test/gru-2-256/ are necessary to run decode)
 ```bash
 python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
 ```
