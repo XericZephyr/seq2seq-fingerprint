@@ -3,18 +3,19 @@ This code implements sequence to sequence fingerprint.
 
 ## Installation requirements
 
-1.We right now depend on the tensorflow==1.4.1/tensorflow-gpu==1.3.0.<br>
+1.We right now depend on the tensorflow==1.4.1.<br>
 2.smile is required(for Ubuntu OS, pip install smile)
+3.ZINC is used for testing. It's a free database of commercially-available compounds for virtual screening. You can download ZINC datasets [here](http://zinc.docking.org/)
 
 ## References:
 Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
 
 ## Input and output files:
 
-smi_path  /smile/nfs/projects/nih_drug/data/pm2/pm2.smi	&emsp; - input smile data for building vocab<br>
-vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab &emsp;&emsp;&emsp;&nbsp;&nbsp; - directory to save vocab<br>
-out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens  &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save tokens<br>
-tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save temporary data<br>
+smi_path   /data/zinc/zinc.smi	&emsp; - input smile data for building vocab<br>
+vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab &emsp;&emsp;&emsp;&nbsp;&nbsp; - directory to save vocab<br>
+out_path ~/expr/seq2seq-fp/pretrain/zinc.tokens  &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save tokens<br>
+tmp_path ~/expr/seq2seq-fp/pretrain/zinc.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save temporary data<br>
 
 
 ## Running workflow:
@@ -26,14 +27,14 @@ tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&n
  Use the build_vocab switch to turn on building vocabulary functionality.
 
 ```bash
-python data.py --build_vocab 1 --smi_path /smile/nfs/projects/nih_drug/data/pm2/pm2.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/pm2.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/pm2.tmp
+python data.py --build_vocab 1 --smi_path /data/zinc/zinc.smi --vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab --out_path ~/expr/seq2seq-fp/pretrain/zinc.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/zinc.tmp
 ```
 
 Example Output:
 ```
 Creating temp file...
 Building vocabulary...
-Creating vocabulary /home/username/expr/test/pretrain/pm2.vocab from data /tmp/tmpcYVqV0
+Creating vocabulary /home/username/expr/test/pretrain/zinc.vocab from data /tmp/tmpcYVqV0
   processing line 100000
   processing line 200000
   processing line 300000
@@ -49,7 +50,7 @@ Tokenizing data in /tmp/tmpcYVqV0
   Switch off build_vocab option, or simply hide it from the command line.
 
 ```bash
-python -m unsupervised.data --smi_path /smile/nfs/projects/nih_drug/data/logp/logp.smi --vocab_path ~/expr/seq2seq-fp/pretrain/pm2.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
+python -m unsupervised.data --smi_path /data/zinc/zinc.smi --vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
 ```
 Example Output:
 ```
@@ -70,7 +71,7 @@ model.json example
  ```
 #### Train model
 ```bash
-python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 64
+python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc _10k.tokens --batch_size 64
 ```
 Example Output:
 ```
@@ -88,9 +89,9 @@ global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
 #### Train from fresh
 (Note: delte old weights folder before training from fresh)
 ```bash
-python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
-python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
-python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
 ```
 Example output
 ```
@@ -109,7 +110,7 @@ global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
 ### Decode
  (note: model.json and weights in the subdirectory of ~/expr/test/gru-2-256/ are necessary to run decode)
 ```bash
-python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp --sample_size 500
+python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc _10k.tmp --sample_size 500
 ```
 Example output:
 ```
@@ -132,7 +133,7 @@ Loading model weights from checkpoint_dir: /home/zhengxu/expr/test/gru-4-256/wei
 ```
 #### All FP
 
-python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/pm2.vocab ~/expr/seq2seq-fp/pretrain/pm2_10k.tmp ~/expr/test_2.fp
+python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_10k.tmp ~/expr/test_2.fp
 
 Example Output:
 ```
@@ -210,10 +211,10 @@ Exact match: 8086/10851
 ```
 ### Note: you can use the following example to debug
 ```bash
-python train.py train ~/expr/unsup-seq2seq/models/debug/ ~/expr/unsup-seq2seq/data/pm2.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug/summary/
+python train.py train ~/expr/unsup-seq2seq/models/debug/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug/summary/
 Debug-Acc
 ```
 ```bash
-python train.py train ~/expr/unsup-seq2seq/models/debug-acc/ ~/expr/seq2seq-fp/pretrain/pm2.tokens ~/expr/seq2seq-fp/pretrain/pm2_10k.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug-acc/summary/
+python train.py train ~/expr/unsup-seq2seq/models/debug-acc/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc_10k.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug-acc/summary/
 ```
 
