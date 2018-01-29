@@ -4,8 +4,8 @@ This code implements sequence to sequence fingerprint.
 ## Installation requirements
 
 1.We right now depend on the tensorflow==1.4.1.<br>
-2.smile is required(for Ubuntu OS, pip install smile)
-3.ZINC is used for testing. It's a free database of commercially-available compounds for virtual screening. You can download ZINC datasets [here](http://zinc.docking.org/)
+2.smile is required(for Ubuntu OS, pip install smile).<br>
+3.ZINC is used for testing. It's a free database of commercially-available compounds for virtual screening. You can download ZINC datasets from [http://zinc.docking.org/](http://zinc.docking.org/)
 
 ## References:
 Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
@@ -13,9 +13,9 @@ Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: A
 ## Input and output files:
 
 smi_path   /data/zinc/zinc.smi	&emsp; - input smile data for building vocab<br>
-vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab &emsp;&emsp;&emsp;&nbsp;&nbsp; - directory to save vocab<br>
-out_path ~/expr/seq2seq-fp/pretrain/zinc.tokens  &emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save tokens<br>
-tmp_path ~/expr/seq2seq-fp/pretrain/zinc.tmp     &emsp;&emsp;&emsp;&emsp;&emsp;&nbsp;&nbsp;  - directory to save temporary data<br>
+vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab &nbsp;&nbsp; - directory to save vocab<br>
+out_path ~/expr/seq2seq-fp/pretrain/zinc.tokens  &emsp;&nbsp;&nbsp;  - directory to save tokens<br>
+tmp_path ~/expr/seq2seq-fp/pretrain/zinc.tmp     &emsp;&emsp;&nbsp;&nbsp;  - directory to save temporary data<br>
 
 
 ## Running workflow:
@@ -50,7 +50,7 @@ Tokenizing data in /tmp/tmpcYVqV0
   Switch off build_vocab option, or simply hide it from the command line.
 
 ```bash
-python -m unsupervised.data --smi_path /data/zinc/zinc.smi --vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
+python data.py --smi_path /data/zinc/zinc.smi --vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
 ```
 Example Output:
 ```
@@ -71,7 +71,7 @@ model.json example
  ```
 #### Train model
 ```bash
-python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc _10k.tokens --batch_size 64
+python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc _test_data.tokens --batch_size 64
 ```
 Example Output:
 ```
@@ -133,7 +133,7 @@ Loading model weights from checkpoint_dir: /home/zhengxu/expr/test/gru-4-256/wei
 ```
 #### All FP
 
-python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_10k.tmp ~/expr/test_2.fp
+python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_test_data.tmp ~/expr/test_2.fp
 
 Example Output:
 ```
