@@ -12,7 +12,7 @@ import random
 import numpy as np
 import tensorflow as tf
 
-from para import param
+from .base_hparams import build_base_hparams
 from .utils import (initialize_vocabulary, sentence_to_token_ids, smile_tokenizer, EOS_ID, PAD_ID,
                     GO_ID)
 
@@ -70,6 +70,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         self.global_step = tf.Variable(0, trainable=False)
 
         size = hparams.size
+        buckets = hparams.buckets
         dropout_rate = hparams.dropout_rate
         num_layers = hparams.num_layers
 
@@ -131,10 +132,10 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         self.encoder_inputs = []
         self.decoder_inputs = []
         self.target_weights = []
-        for i in xrange(hparams.buckets[-1][0]):  # Last bucket is the biggest one.
+        for i in xrange(buckets[-1][0]):  # Last bucket is the biggest one.
             self.encoder_inputs.append(tf.placeholder(tf.int32, shape=[None],
                                                       name="encoder{0}".format(i)))
-        for i in xrange(hparams.buckets[-1][1] + 1):
+        for i in xrange(buckets[-1][1] + 1):
             self.decoder_inputs.append(tf.placeholder(tf.int32, shape=[None],
                                                       name="decoder{0}".format(i)))
             self.target_weights.append(tf.placeholder(dtype, shape=[None],
@@ -148,11 +149,11 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         if forward_only:
             self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
                 self.encoder_inputs, self.decoder_inputs, targets,
-                self.target_weights, hparams.buckets, lambda x, y: seq2seq_f(x, y, True),
+                self.target_weights, buckets, lambda x, y: seq2seq_f(x, y, True),
                 softmax_loss_function=softmax_loss_function)
             # If we use output projection, we need to project outputs for decoding.
             if output_projection is not None:
-                for b in xrange(len(hparams.buckets)):
+                for b in xrange(len(buckets)):
                     self.outputs[b] = [
                         tf.matmul(output, output_projection[0]) + output_projection[1]
                         for output in self.outputs[b]
@@ -160,7 +161,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
         else:
             self.outputs, self.losses = tf.contrib.legacy_seq2seq.model_with_buckets(
                 self.encoder_inputs, self.decoder_inputs, targets,
-                self.target_weights, hparams.buckets,
+                self.target_weights, buckets,
                 lambda x, y: seq2seq_f(x, y, False),
                 softmax_loss_function=softmax_loss_function)
 
@@ -172,7 +173,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
             self.updates = []
             lr_summary_op = tf.summary.scalar("learning rate", self.learning_rate_op)
             opt = tf.train.GradientDescentOptimizer(self.learning_rate_op)
-            for b in xrange(len(hparams.buckets)):
+            for b in xrange(len(buckets)):
                 gradients = tf.gradients(self.losses[b], params)
                 clipped_gradients, norm = tf.clip_by_global_norm(gradients,
                                                                  hparams.max_gradient_norm)
@@ -193,7 +194,7 @@ class Seq2SeqModel(object): # pylint: disable=too-many-instance-attributes
     @classmethod
     def load_model_from_files(cls, model_file, checkpoint_dir, forward_only, sess=None):
         """Load model from file."""
-        hparams = param()
+        hparams = build_base_hparams()
         print("Loading seq2seq model definition from %s..." % model_file)
         with open(model_file, "r") as fobj:
             model_dict = json.load(fobj)

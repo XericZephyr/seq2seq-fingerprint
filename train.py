@@ -15,7 +15,7 @@ import numpy as np
 
 from unsupervised import seq2seq_model
 from unsupervised.utils import EOS_ID, PAD_ID
-from para import param
+from unsupervised.base_hparams import build_base_hparams
 
 with sm.app.flags.Subcommand("build", dest="action"):
     sm.app.flags.DEFINE_string("model_dir", "", "model path of the seq2seq fingerprint.",
@@ -55,7 +55,7 @@ FLAGS = sm.app.flags.FLAGS
 
 def build_hparams():
     """build model.json using hyper-parameters"""
-    hparams = param()
+    hparams = build_base_hparams()
     model_file = os.path.join(FLAGS.model_dir, "model.json")
     with open(model_file, "w") as fobj:
         fobj.write(hparams.to_json())
