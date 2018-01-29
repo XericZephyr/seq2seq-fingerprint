@@ -39,8 +39,8 @@ def sample_smiles(data_path, sample_size):
     if data_size < sample_size:
         sample_size_ori = sample_size
         sample_size = data_size
-        logging.warning("Warning: sample size (%d) is too large, "
-                        "the data size (%d) is used instead as the sample size"
+        logging.warning("sample size (%d) is too large, "
+                        "data size (%d) is used instead as the sample size"
                         % (sample_size_ori, data_size))
     while len(samples) < sample_size:
         samples.add(random.randrange(len(lines)))
