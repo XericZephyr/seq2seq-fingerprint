@@ -3,9 +3,9 @@ This code implements sequence to sequence fingerprint.
 
 ## Installation requirements
 
-1. We right now depend on the tensorflow==1.4.1. 
-2. smile is required(for Ubuntu OS, ```pip install smile```).<br>
-3. ZINC is used for testing, which is a free database of commercially-available compounds for virtual screening. You can download ZINC datasets from [http://zinc.docking.org/](http://zinc.docking.org/)
+ 1. We right now depend on the tensorflow==1.4.1. 
+ 2. smile is required(for Ubuntu OS, ```pip install smile```).
+ 3. ZINC is used for testing, which is a free database of commercially-available compounds for virtual screening. You can download ZINC datasets from [http://zinc.docking.org/](http://zinc.docking.org/)
 
 ## References:
 Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
