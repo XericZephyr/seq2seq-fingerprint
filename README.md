@@ -48,9 +48,9 @@ Tokenizing data in /tmp/tmpcYVqV0
 #### If vocabulary already exsits
   Translate the SMI file using existing vocabulary
   Switch off build_vocab option, or simply hide it from the command line.
-
+  (note: zinc.smi is used for training, zinc_test.smi is used for evaluating)
 ```bash
-python data.py --smi_path /data/zinc/zinc.smi --vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab --out_path ~/expr/seq2seq-fp/pretrain/logp.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/logp.tmp
+python data.py --smi_path /data/zinc/zinc_test.smi --vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab --out_path ~/expr/seq2seq-fp/pretrain/zinc_test.tokens --tmp_path ~/expr/seq2seq-fp/pretrain/zinc_test.tmp
 ```
 Example Output:
 ```
@@ -71,7 +71,7 @@ model.json example
  ```
 #### Train model
 ```bash
-python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc _test_data.tokens --batch_size 64
+python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc_test.tokens --batch_size 64
 ```
 Example Output:
 ```
@@ -86,12 +86,12 @@ global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
   eval: bucket 2 perplexity 1.000259
   eval: bucket 3 perplexity 1.001401
 ```
-#### Train from fresh
-(Note: delte old weights folder before training from fresh)
+#### Train from scratch
+(Note: delte old weights before training from scratch)
 ```bash
-python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
-python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256
-python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/zinc_test.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/zinc_test.tokens --batch_size 256
+python train.py train ~/expr/unsup-seq2seq/models/gru-2-256/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/zinc_test.tokens --batch_size 256 --summary_dir ~/expr/unsup-seq2seq/models/gru-2-256/summary/
 ```
 Example output
 ```
@@ -108,9 +108,9 @@ global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
 ```
 
 ### Decode
- (note: model.json and weights in the subdirectory of ~/expr/test/gru-2-256/ are necessary to run decode)
+ (**note**: model.json and weights in the subdirectory of ```~/expr/test/gru-2-256/``` are necessary to run decode)
 ```bash
-python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc _10k.tmp --sample_size 500
+python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_test.tmp --sample_size 500
 ```
 Example output:
 ```
@@ -132,9 +132,10 @@ Loading model weights from checkpoint_dir: /home/zhengxu/expr/test/gru-4-256/wei
 > CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
 ```
 #### All FP
-
+   generate all fingerprint
+```bash
 python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_test_data.tmp ~/expr/test_2.fp
-
+```
 Example Output:
 ```
 Progress: 200/10000
@@ -189,25 +190,6 @@ Progress: 9800/10000
 Exact match count: 9665/10000
 ```
 
-### Generate all fingerprints for logp data
-
-```bash
-python -m unsupervised.pretrain --get_fp 1 --dev_file logp.tmp --fp_file logp.fp
-```
-
-Sample Output:
-```
-Reading model parameters from /tmp/seq2seq-fp/pretrain/train/seq2seq_pretrain.ckpt-94000
-Progress: 200/10851
-Progress: 400/10851
-Progress: 600/10851
-Progress: 800/10851
-Progress: 1000/10851
-[omit several lines...]
-Progress: 10400/10851
-Progress: 10600/10851
-Progress: 10800/10851
-Exact match: 8086/10851
 ```
 ### Note: you can use the following example to debug
 ```bash
