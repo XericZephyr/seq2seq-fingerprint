@@ -12,10 +12,10 @@ Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: A
 
 ## Input and output files:
 
-smi_path    /data/zinc/zinc.smi	&emsp;          - input smile data for building vocab<br>
-vocab_path ~/expr/seq2seq-fp/pretrain/zinc.vocab &nbsp;&nbsp; - directory to save vocab<br>
-out_path ~/expr/seq2seq-fp/pretrain/zinc.tokens  &emsp;&nbsp;&nbsp;  - directory to save tokens<br>
-tmp_path ~/expr/seq2seq-fp/pretrain/zinc.tmp     &emsp;&emsp;&nbsp;&nbsp;  - directory to save temporary data<br>
+smi_path:    /data/zinc/zinc.smi	&emsp;&emsp;&emsp;          - input smile data for building vocab<br>
+vocab_path: ~/expr/seq2seq-fp/pretrain/zinc.vocab &nbsp;&nbsp; - directory to save vocab<br>
+out_path: ~/expr/seq2seq-fp/pretrain/zinc.tokens  &emsp;&nbsp;&nbsp;  - directory to save tokens<br>
+tmp_path: ~/expr/seq2seq-fp/pretrain/zinc.tmp     &emsp;&emsp;&nbsp;&nbsp;  - directory to save temporary data<br>
 
 
 ## Running workflow:
