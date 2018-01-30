@@ -8,7 +8,7 @@ import random
 
 import tensorflow as tf
 import smile as sm
-
+from smile import logging
 from unsupervised.seq2seq_model import FingerprintFetcher
 
 with sm.app.flags.Subcommand("sample", dest="action"):
@@ -39,9 +39,9 @@ def sample_smiles(data_path, sample_size):
     if data_size < sample_size:
         sample_size_ori = sample_size
         sample_size = data_size
-        print("decode :\nsample size %d is larger than data size %d,"
-              "data size %d is used as sample size"
-              % (sample_size_ori, data_size, data_size))
+        logging.warning("sample size (%d) is too large, "
+                        "data size (%d) is used instead as the sample size"
+                        % (sample_size_ori, data_size))
     while len(samples) < sample_size:
         samples.add(random.randrange(len(lines)))
     return [lines[index].strip() for index in list(samples)]

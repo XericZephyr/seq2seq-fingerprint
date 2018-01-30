@@ -9,22 +9,30 @@ import os
 import sys
 import time
 
-import numpy as np
 import tensorflow as tf
 import smile as sm
+import numpy as np
 
 from unsupervised import seq2seq_model
 from unsupervised.utils import EOS_ID, PAD_ID
+from unsupervised.base_hparams import build_base_hparams
 
-# TODO: in the future we need to implement the build model option with data script.
 with sm.app.flags.Subcommand("build", dest="action"):
-    sm.app.flags.DEFINE_integer("num_layers", 3, "Number of layers in the model.")
-    sm.app.flags.DEFINE_integer("size", 256, "Size of each model layer.")
+    sm.app.flags.DEFINE_string("model_dir", "", "model path of the seq2seq fingerprint.",
+                               required=True)
+    sm.app.flags.DEFINE_integer("num_layers", 2, "Number of layers in the model.")
+    sm.app.flags.DEFINE_integer("size", 128, "Size of each model layer.")
     sm.app.flags.DEFINE_float("learning_rate", 0.5, "Learning rate.")
     sm.app.flags.DEFINE_float("learning_rate_decay_factor", 0.99,
                               "Learning rate decays by this much.")
-    sm.app.flags.DEFINE_float("max_gradient_norm", 5.0,
-                              "Clip gradients to this norm.")
+    sm.app.flags.DEFINE_float("max_gradient_norm", 5.0, "Clip gradients to this norm.")
+    sm.app.flags.DEFINE_float("dropout_rate", 0.5, "dropout rate")
+    sm.app.flags.DEFINE_string("buckets", "[[30, 30], [60, 60], [90, 90]]", "buckets")
+    sm.app.flags.DEFINE_integer("target_vocab_size", 41, "target vocab size")
+    sm.app.flags.DEFINE_integer("batch_size", 256, "dropout rate")
+    sm.app.flags.DEFINE_integer("source_vocab_size", 41, "source vocab size")
+
+
 
 with sm.app.flags.Subcommand("train", dest="action"):
     sm.app.flags.DEFINE_string("model_dir", "", "model path of the seq2seq fingerprint.",
@@ -44,6 +52,14 @@ with sm.app.flags.Subcommand("train", dest="action"):
 
 
 FLAGS = sm.app.flags.FLAGS
+
+def build_hparams():
+    """build model.json using hyper-parameters"""
+    hparams = build_base_hparams()
+    model_file = os.path.join(FLAGS.model_dir, "model.json")
+    with open(model_file, "w") as fobj:
+        fobj.write(hparams.to_json())
+
 
 def read_data(source_path, buckets, max_size=None):
     """Read data from source and target files and put into buckets.
@@ -200,7 +216,7 @@ def train(train_data, test_data): # pylint: disable=too-many-locals
 def main(_):
     """Entry function for the script."""
     if FLAGS.action == "build":
-        raise NotImplementedError("Model build action not implemented.")
+        build_hparams()
     elif FLAGS.action == "train":
         train(FLAGS.train_data, FLAGS.test_data)
     else:
