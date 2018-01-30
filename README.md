@@ -12,10 +12,10 @@ Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: A
 
 ## Input and output files:
 
-- smi_path   &emsp; /data/zinc/zinc.smi	 &emsp; - input smile data for building vocab 
-- vocab_path &emsp;~/expr/seq2seq-fp/pretrain/zinc.vocab &emsp; - directory to save vocab 
-- out_path &emsp;~/expr/seq2seq-fp/pretrain/zinc.tokens &emsp; - directory to save tokens 
-- tmp_path &emsp;~/expr/seq2seq-fp/pretrain/zinc.tmp &emsp; - directory to save temporary data 
+- smi_path   | /data/zinc/zinc.smi	 | - input smile data for building vocab 
+- vocab_path |~/expr/seq2seq-fp/pretrain/zinc.vocab | - directory to save vocab 
+- out_path |~/expr/seq2seq-fp/pretrain/zinc.tokens | - directory to save tokens 
+- tmp_path |~/expr/seq2seq-fp/pretrain/zinc.tmp | - directory to save temporary data 
 
 
 ## Running workflow:
@@ -188,15 +188,5 @@ Progress: 9400/10000
 Progress: 9600/10000
 Progress: 9800/10000
 Exact match count: 9665/10000
-```
-
-```
-### Note: you can use the following example to debug
-```bash
-python train.py train ~/expr/unsup-seq2seq/models/debug/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/logp.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug/summary/
-Debug-Acc
-```
-```bash
-python train.py train ~/expr/unsup-seq2seq/models/debug-acc/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc_10k.tokens --batch_size 32 --summary_dir ~/expr/unsup-seq2seq/models/debug-acc/summary/
 ```
 
