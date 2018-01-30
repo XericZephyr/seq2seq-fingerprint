@@ -132,9 +132,9 @@ Loading model weights from checkpoint_dir: /home/zhengxu/expr/test/gru-4-256/wei
 > CC1=CC(=CC=C1)C(=O)NC2=CC(=CC=C2)C(=O)N3CCOCC3
 ```
 #### All FP
-   generate all fingerprint
+   Generate all fingerprint
 ```bash
-python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_test_data.tmp ~/expr/test_2.fp
+python decode.py fp ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_test.tmp ~/expr/test_2.fp
 ```
 Example Output:
 ```
