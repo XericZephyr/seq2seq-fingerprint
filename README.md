@@ -11,8 +11,9 @@ This code implements sequence to sequence fingerprint.
 Zheng Xu, Sheng Wang, Feiyun Zhu, and Junzhou Huang,2017, Seq2seq Fingerprint: An Unsupervised Deep MolecularEmbedding for Drug Discovery,BCB’17, Aug 2017, Boston, Massachusetts USA
 
 ## Input and output files:
-
-- smi_path    /data/zinc/zinc.smi	  - input smile data for building vocab 
+First Header | Second Header | Discription
+------------ | --------------|-------------------
+- smi_path   | /data/zinc/zinc.smi	  |- input smile data for building vocab 
 - vocab_path |~/expr/seq2seq-fp/pretrain/zinc.vocab | - directory to save vocab 
 - out_path |~/expr/seq2seq-fp/pretrain/zinc.tokens | - directory to save tokens 
 - tmp_path |~/expr/seq2seq-fp/pretrain/zinc.tmp | - directory to save temporary data 
