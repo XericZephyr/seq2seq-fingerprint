@@ -28,9 +28,9 @@ tmp_path |~/expr/seq2seq-fp/pretrain/zinc.tmp | - directory to save temporary da
 
 ## Running workflow:
 
-### 1.Prepare data
+### 1. Prepare data
 
-#### a)Build vocabulary
+#### a) Build vocabulary
 
  Use the build_vocab switch to turn on building vocabulary functionality.
 
@@ -53,7 +53,7 @@ Tokenizing data in /tmp/tmpcYVqV0
   tokenizing line 300000
 ```
 
-#### b)If vocabulary already exsits (for test data)
+#### b) If vocabulary already exsits (for test data)
   Translate the SMI file using existing vocabulary
   Switch off build_vocab option, or simply hide it from the command line.
   (note: zinc.smi is used for training, zinc_test.smi is used for evaluating)
@@ -67,8 +67,8 @@ Reading vocabulary...
 Translating vocabulary to tokens...
 Tokenizing data in /tmp/tmpmP8R_P
 ```
-### 2.Train
-#### a)Build model(model.json)
+### 2. Train
+#### a) Build model(model.json)
 ```bash
 python train.py build ~/expr/test/gru-2-256/
 ```
@@ -77,7 +77,7 @@ model.json example
  {"dropout_rate": 0.5, "learning_rate_decay_factor": 0.99, "buckets": [[30, 30], [60, 60], [90, 90]], "target_vocab_size": 41, "batch_size": 5, "source_vocab_size": 41, "num_layers": 2, "max_gradient_norm": 5.0, "learning_rate": 0.5, "size": 128}
 
  ```
-#### b)Train model
+#### b) Train model
 ```bash
 python train.py train ~/expr/test/gru-2-256/ ~/expr/seq2seq-fp/pretrain/zinc.tokens ~/expr/seq2seq-fp/pretrain/zinc_test.tokens --batch_size 64
 ```
@@ -115,7 +115,7 @@ global step 400 learning rate 0.5000 step-time 0.259872 perplexity 6.460571
   eval: bucket 3 perplexity 12.682373
 ```
 
-### 3.Decode
+### 3. Decode
  (**note**: model.json and weights in the subdirectory of ```~/expr/test/gru-2-256/``` are necessary to run decode)
 ```bash
 python decode.py sample ~/expr/test/gru-2-256/  ~/expr/seq2seq-fp/pretrain/zinc.vocab ~/expr/seq2seq-fp/pretrain/zinc_test.tmp --sample_size 500
