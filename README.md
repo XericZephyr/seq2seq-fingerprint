@@ -8,7 +8,7 @@ This code implements sequence to sequence fingerprint.
 3. ZINC is used for our experiments, which is a free database of commercially-available compounds for virtual screening. You can download ZINC datasets from [http://zinc.docking.org/](http://zinc.docking.org/)
 
 ## References:
-If our work helpful for your research, please consider citing:
+If our work is helpful for your research, please consider citing:
 ```bash
 @article{xu2017seq2seqfingerprint,
   title={Seq2seq Fingerprint: An Unsupervised Deep Molecular Embedding for Drug Discovery},
