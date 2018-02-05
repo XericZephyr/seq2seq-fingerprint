@@ -95,7 +95,6 @@ global step 145800 learning rate 0.1200 step-time 0.265477 perplexity 1.001033
   eval: bucket 3 perplexity 1.001401
 ```
 #### Train from scratch
-(Note: delte old weights before training from scratch)
 ```bash
 python train.py train ~/expr/unsup-seq2seq/models/gru-2-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/zinc_test.tokens --batch_size 256
 python train.py train ~/expr/unsup-seq2seq/models/gru-3-128/ ~/expr/unsup-seq2seq/data/zinc.tokens ~/expr/unsup-seq2seq/data/zinc_test.tokens --batch_size 256
